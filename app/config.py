@@ -37,6 +37,8 @@ def normalize_database_url(url: str | None) -> str | None:
     url = url.strip()
     if url.startswith("postgres://"):
         url = "postgresql://" + url[len("postgres://"):]
+    if url.startswith("postgresql+psycopg2://"):
+        url = "postgresql+psycopg://" + url[len("postgresql+psycopg2://"):]
     if url.startswith("postgresql://"):
         url = "postgresql+psycopg://" + url[len("postgresql://"):]
     return url
@@ -64,14 +66,21 @@ def build_config(env: Mapping[str, str]) -> dict[str, Any]:
     is_prod = app_env == "production"
     session_minutes = _int(env, "SESSION_LIFETIME_MINUTES", 30)
 
+    db_uri = normalize_database_url(env.get("DATABASE_URL"))
+    engine_opts: dict[str, Any] = {"pool_pre_ping": True, "pool_recycle": 280}
+    if db_uri and not db_uri.startswith("sqlite"):
+        engine_opts["connect_args"] = {"connect_timeout": 10}
+        engine_opts["pool_size"] = 5
+        engine_opts["max_overflow"] = 5
+
     return {
         "APP_ENV": app_env,
         "DEBUG": app_env == "development" and env.get("FLASK_DEBUG", "0") == "1",
         "TESTING": app_env == "testing",
         "SECRET_KEY": env.get("SECRET_KEY") or "",
-        "SQLALCHEMY_DATABASE_URI": normalize_database_url(env.get("DATABASE_URL")),
+        "SQLALCHEMY_DATABASE_URI": db_uri,
         "SQLALCHEMY_TRACK_MODIFICATIONS": False,
-        "SQLALCHEMY_ENGINE_OPTIONS": {"pool_pre_ping": True, "pool_recycle": 280},
+        "SQLALCHEMY_ENGINE_OPTIONS": engine_opts,
         # Sessions / cookies
         "SESSION_COOKIE_NAME": "srms_session",
         "SESSION_COOKIE_HTTPONLY": True,
@@ -132,6 +141,9 @@ def validate_config(cfg: Mapping[str, Any]) -> None:
     if app_env == "production":
         if cfg.get("DEBUG"):
             raise ConfigError("DEBUG must be disabled in production")
+        db_uri = cfg.get("SQLALCHEMY_DATABASE_URI") or ""
+        if db_uri.startswith("sqlite"):
+            raise ConfigError("SQLite is not allowed in production; a PostgreSQL database URL is required")
         if len(secret) < MIN_PRODUCTION_SECRET_LENGTH or secret.startswith("change-me"):
             raise ConfigError(
                 f"SECRET_KEY must be a random value of at least {MIN_PRODUCTION_SECRET_LENGTH} characters"

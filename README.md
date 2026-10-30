@@ -259,3 +259,13 @@ The application supports three CAPTCHA operating modes:
   - Set `TURNSTILE_ALLOWED_HOSTNAMES=srms-stqa.onrender.com`.
   > [!IMPORTANT]
   > Production interlocks strictly reject dummy tokens and test keys (`1x...`, `2x...`, `3x...`) during `create_app()`, preventing accidental test-mode deployments.
+
+---
+
+## Production Deployment (Render + Neon)
+
+The application is fully configured for deployment on **Render** (Flask web service) and **Neon** (Serverless PostgreSQL):
+- **Blueprint:** [`render.yaml`](file:///c:/Users/bhava/Downloads/ST&QA/render.yaml) defines automated build and start commands.
+- **Entrypoint:** [`wsgi.py`](file:///c:/Users/bhava/Downloads/ST&QA/wsgi.py) (`app = create_app()`) served via Gunicorn.
+- **Deployment Guide:** Complete step-by-step instructions for provisioning Neon, setting up Cloudflare Turnstile, configuring Render environment variables, applying migrations, and provisioning accounts are documented in [`docs/DEPLOYMENT.md`](file:///c:/Users/bhava/Downloads/ST&QA/docs/DEPLOYMENT.md).
+

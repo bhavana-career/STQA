@@ -24,6 +24,10 @@ class TestDatabaseUrlNormalization:
         url = "postgresql://user:pass@host:5432/db"
         assert normalize_database_url(url) == "postgresql+psycopg://user:pass@host:5432/db"
 
+    def test_postgresql_psycopg2_url_converted_to_psycopg(self):
+        url = "postgresql+psycopg2://user:pass@host:5432/db"
+        assert normalize_database_url(url) == "postgresql+psycopg://user:pass@host:5432/db"
+
     def test_sqlite_url_preserved(self):
         url = "sqlite:///:memory:"
         assert normalize_database_url(url) == "sqlite:///:memory:"
@@ -188,3 +192,18 @@ class TestProductionConfigSafetyInterlocks:
         cfg["SESSION_COOKIE_SECURE"] = False
         with pytest.raises(ConfigError, match="SESSION_COOKIE_SECURE must be enabled in production"):
             validate_config(cfg)
+
+    def test_production_rejects_sqlite_database(self, valid_prod_env):
+        valid_prod_env["DATABASE_URL"] = "sqlite:///instance/prod.db"
+        cfg = build_config(valid_prod_env)
+        with pytest.raises(ConfigError, match="SQLite is not allowed in production"):
+            validate_config(cfg)
+
+    def test_postgresql_connection_pool_options_configured(self, valid_prod_env):
+        cfg = build_config(valid_prod_env)
+        opts = cfg["SQLALCHEMY_ENGINE_OPTIONS"]
+        assert opts["pool_pre_ping"] is True
+        assert opts["pool_recycle"] == 280
+        assert opts["connect_args"]["connect_timeout"] == 10
+        assert opts["pool_size"] == 5
+        assert opts["max_overflow"] == 5
