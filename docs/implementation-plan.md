@@ -26,8 +26,8 @@
 | M2 | Grading core (TDD) | `grading.py`, `parse_mark` + unit tests (CALC, BB, WB) | Unit tests pass; coverage measured and recorded (100% grading, 98% marks) | **COMPLETED & APPROVED** |
 | M3 | Data layer | Models, initial Alembic migration, CLI `seed-demo` / `create-user` / `assign` / `unlock-user` | `flask db upgrade` on Docker Postgres; TC-DB-01/03/06/07/08/09/10, TC-OPS-01…05 pass (131 tests pass) | **COMPLETED & APPROVED** |
 | M4 | Auth + CAPTCHA | Turnstile verifier, mock verifier, login/logout, lockout, session_version, CSRF, headers | TC-CAP-01…11, TC-AUTH-*, TC-AUTHZ-*, TC-SEC-* pass (190 tests pass, 91% coverage) | **COMPLETED & APPROVED** |
-| M5 | Student & teacher features | Result API + dashboard + modal; teacher list/editor + PUT API with atomic save & audit | TC-AUTHZ-*, TC-MARK-*, TC-CALC-14/15, TC-DB-* pass (211 tests pass, 88% coverage) | **COMPLETED** (Ready for Review) |
-| M6 | UI polish & accessibility | Responsive CSS, loading/error states, keyboard modal | Manual check + Selenium TC-UI-* |
+| M5 | Student & teacher features | Result API + dashboard + modal; teacher list/editor + PUT API with atomic save & audit | TC-AUTHZ-*, TC-MARK-*, TC-CALC-14/15, TC-DB-* pass (211 tests pass, 88% coverage) | **COMPLETED & APPROVED** |
+| M6 | UI polish & accessibility | Responsive CSS, loading/error states, keyboard modal, headless Selenium setup & smoke suite | 10 Selenium E2E smoke tests pass; 224 total tests pass with 90% branch/stmt coverage | **COMPLETED** (Ready for Review) |
 | M7 | Selenium E2E | Live-server fixture, page objects, screenshots on failure, mock-widget + Turnstile-test-key suites | `pytest -m e2e` passes locally headless |
 | M8 | Academic exercises + fault injection | `academic/`, `fault_injection/`, `docs/defects.md` with real before/after outputs | `pytest -m fault_demo` shows the expected failures; fixed runs pass |
 | M9 | CI | `.github/workflows/ci.yml`: unit → integration (Postgres service) → e2e (headless Chrome) → coverage/report artifacts; gitleaks | Green run on GitHub (link recorded) |

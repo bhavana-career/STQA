@@ -8,28 +8,29 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 </head>
 <body>
-    <header class="site-header">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <header class="site-header" role="banner">
         <div class="container header-container">
             <h1 class="portal-title">10th Standard Result Portal</h1>
             <span class="badge demo-badge">Demonstration System — Academic Use Only</span>
         </div>
     </header>
 
-    <main class="container main-content">
-        <section class="hero-section">
-            <h2>Welcome to Student Result Management System</h2>
+    <main class="container main-content" id="main-content" role="main">
+        <section class="hero-section" aria-labelledby="hero-title">
+            <h2 id="hero-title">Welcome to Student Result Management System</h2>
             <p class="lead-text">
                 Fictional demonstration portal for the Software Testing and Quality Assurance (STQA) laboratory.
                 All student, teacher, and examination records are synthetic sample data.
             </p>
             <div class="card-grid">
-                <article class="portal-card">
-                    <h3>Student Portal</h3>
+                <article class="portal-card" aria-labelledby="card-student-title">
+                    <h3 id="card-student-title">Student Portal</h3>
                     <p>Check your 10th Standard examination results, grade breakdown, and subject performance.</p>
                     <a href="{{ url_for('auth.student_login') }}" class="btn btn-primary" id="student-login-link">Student Login</a>
                 </article>
-                <article class="portal-card">
-                    <h3>Teacher Portal</h3>
+                <article class="portal-card" aria-labelledby="card-teacher-title">
+                    <h3 id="card-teacher-title">Teacher Portal</h3>
                     <p>Enter, update, and submit subject marks for assigned students in your section.</p>
                     <a href="{{ url_for('auth.teacher_login') }}" class="btn btn-secondary" id="teacher-login-link">Teacher Login</a>
                 </article>
@@ -37,7 +38,7 @@
         </section>
     </main>
 
-    <footer class="site-footer">
+    <footer class="site-footer" role="contentinfo">
         <div class="container">
             <p>&copy; 2026 SRMS Academic Lab Project. Fictional sample data only.</p>
         </div>

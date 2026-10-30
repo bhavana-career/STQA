@@ -100,12 +100,19 @@ pytest -m unit
 pytest -m integration
 ```
 
-### 3. Full Test Suite with Statement & Branch Coverage
+### 3. Selenium WebDriver End-to-End (E2E) Smoke Tests
+Headless Chrome browser automation using Selenium WebDriver:
+```powershell
+pytest tests/e2e/test_smoke.py -v
+```
+*Note: Requires Google Chrome or Chromium installed. Selenium Manager automatically resolves and provisions the matching chromedriver binary. In case of any test assertion or timeout failure, an automated full-page screenshot artifact is automatically saved to `reports/screenshots/<test_name>.png`.*
+
+### 4. Full Automated Test Suite with Statement & Branch Coverage
 ```powershell
 pytest -v --cov=app --cov-branch --cov-report=term-missing --cov-report=html:reports/coverage --html=reports/test_report.html --self-contained-html
 ```
 
-### 4. Controlled Fault-Injection Defect Demonstrations
+### 5. Controlled Fault-Injection Defect Demonstrations
 ```powershell
 pytest fault_injection/tests/ -v
 ```

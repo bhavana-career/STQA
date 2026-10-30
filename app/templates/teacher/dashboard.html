@@ -9,30 +9,34 @@
     <style>
         .input-mark {
             width: 100px;
-            padding: 0.35rem 0.5rem;
+            padding: 0.4rem 0.5rem;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             font-size: 0.95rem;
         }
-        .input-mark:focus {
-            outline: 2px solid var(--primary-color);
+        .input-mark:focus-visible {
+            outline: 2px solid var(--focus-ring);
+            outline-offset: 1px;
             border-color: transparent;
         }
         .input-mark:disabled {
             background-color: #f1f5f9;
             color: var(--muted-color);
             cursor: not-allowed;
+            border-color: #e2e8f0;
         }
         .field-error-msg {
             color: var(--error-color);
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             margin-top: 0.25rem;
             display: block;
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
-    <header class="site-header">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <header class="site-header" role="banner">
         <div class="container header-container">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <h1 class="portal-title">Teacher Portal</h1>
@@ -48,9 +52,9 @@
         </div>
     </header>
 
-    <main class="container main-content">
-        <div class="card">
-            <h2 class="card-title">Teacher Profile</h2>
+    <main class="container main-content" id="main-content" role="main">
+        <div class="card" aria-labelledby="teacher-profile-heading">
+            <h2 class="card-title" id="teacher-profile-heading">Teacher Profile</h2>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 0.75rem;">
                 <div>
                     <span style="color: var(--muted-color); font-size: 0.85rem;">Teacher Name:</span>
@@ -67,10 +71,10 @@
             </div>
         </div>
 
-        <div class="card">
+        <div class="card" aria-labelledby="students-list-heading">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h2 class="card-title" style="margin-bottom: 0.25rem;">Assigned Students</h2>
+                    <h2 class="card-title" id="students-list-heading" style="margin-bottom: 0.25rem;">Assigned Students</h2>
                     <p style="color: var(--muted-color); font-size: 0.9rem;">
                         Students and subjects assigned to your account. Select a student to enter or update marks.
                     </p>
@@ -84,22 +88,23 @@
                 {% endif %}
             </div>
 
-            <div id="students-loading" style="text-align: center; padding: 2rem;">
+            <div id="students-loading" style="text-align: center; padding: 2rem;" aria-live="polite">
                 <p>Loading assigned students...</p>
             </div>
-            <div id="students-error" class="alert alert-error" style="display: none;" role="alert"></div>
+            <div id="students-error" class="alert alert-error" style="display: none;" role="alert" aria-live="polite"></div>
 
             <div class="table-responsive" id="students-table-container" style="display: none;">
                 <table class="table" id="students-table">
+                    <caption class="sr-only">List of assigned students for marks entry</caption>
                     <thead>
                         <tr>
-                            <th>Student Code</th>
-                            <th>Full Name</th>
-                            <th>Section</th>
-                            <th>Roll No</th>
-                            <th>Assigned Subjects</th>
-                            <th>Result Status</th>
-                            <th>Action</th>
+                            <th scope="col">Student Code</th>
+                            <th scope="col">Full Name</th>
+                            <th scope="col">Section</th>
+                            <th scope="col">Roll No</th>
+                            <th scope="col">Assigned Subjects</th>
+                            <th scope="col">Result Status</th>
+                            <th scope="col">Action</th>
                         </tr>
                     </thead>
                     <tbody id="students-table-body">
@@ -121,15 +126,15 @@
                 <button type="button" class="modal-close" id="marks-modal-close-btn" aria-label="Close dialog">&times;</button>
             </div>
             <div class="modal-body">
-                <div id="marks-modal-loading" style="text-align: center; padding: 1.5rem;">
+                <div id="marks-modal-loading" style="text-align: center; padding: 1.5rem;" aria-live="polite">
                     <p>Loading marks data...</p>
                 </div>
-                <div id="marks-modal-error" class="alert alert-error" style="display: none;" role="alert"></div>
-                <div id="marks-modal-success" class="alert alert-success" style="display: none;" role="alert"></div>
+                <div id="marks-modal-error" class="alert alert-error" style="display: none;" role="alert" aria-live="polite"></div>
+                <div id="marks-modal-success" class="alert alert-success" style="display: none;" role="status" aria-live="polite"></div>
 
                 <div id="marks-modal-content" style="display: none;">
                     <!-- Result Summary Preview -->
-                    <div class="summary-grid" style="margin-top: 0;">
+                    <div class="summary-grid" style="margin-top: 0;" role="region" aria-label="Current marks preview">
                         <div class="summary-card">
                             <div class="label">Total Marks</div>
                             <div class="value" id="modal-res-total">—</div>
@@ -151,13 +156,14 @@
                     <form id="marks-form" onsubmit="return false;">
                         <div class="table-responsive">
                             <table class="table">
+                                <caption class="sr-only">Subject-wise marks entry and editing permissions</caption>
                                 <thead>
                                     <tr>
-                                        <th>Subject</th>
-                                        <th>Max Marks</th>
-                                        <th>Pass Marks</th>
-                                        <th>Marks Obtained</th>
-                                        <th>Status / Edit Permission</th>
+                                        <th scope="col">Subject</th>
+                                        <th scope="col">Max Marks</th>
+                                        <th scope="col">Pass Marks</th>
+                                        <th scope="col">Marks Obtained</th>
+                                        <th scope="col">Status / Edit Permission</th>
                                     </tr>
                                 </thead>
                                 <tbody id="marks-table-body">
@@ -175,293 +181,12 @@
         </div>
     </div>
 
-    <footer class="site-footer">
+    <footer class="site-footer" role="contentinfo">
         <div class="container">
             <p>&copy; 2026 SRMS Academic Lab Project. Fictional sample data only.</p>
         </div>
     </footer>
 
-    <script>
-    (function () {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
-        const backdrop = document.getElementById("marks-modal-backdrop");
-        const modal = document.getElementById("marks-modal");
-        const closeBtn = document.getElementById("marks-modal-close-btn");
-        const cancelBtn = document.getElementById("btn-marks-cancel");
-        const saveBtn = document.getElementById("btn-save-marks");
-
-        const loadingDiv = document.getElementById("students-loading");
-        const errorDiv = document.getElementById("students-error");
-        const tableContainer = document.getElementById("students-table-container");
-        const tbody = document.getElementById("students-table-body");
-
-        let currentStudentId = null;
-        let currentExamId = null;
-        let lastFocusedElement = null;
-
-        // Fetch students on page load
-        loadStudents();
-
-        async function loadStudents() {
-            loadingDiv.style.display = "block";
-            errorDiv.style.display = "none";
-            tableContainer.style.display = "none";
-
-            try {
-                const response = await fetch("/api/teacher/students", {
-                    headers: { "Accept": "application/json" }
-                });
-
-                if (!response.ok) {
-                    const err = await response.json().catch(() => ({}));
-                    throw new Error(err.error?.message || "Failed to load students.");
-                }
-
-                const data = await response.json();
-                currentExamId = data.exam.id;
-                renderStudents(data.students);
-            } catch (err) {
-                loadingDiv.style.display = "none";
-                errorDiv.textContent = err.message;
-                errorDiv.style.display = "block";
-            }
-        }
-
-        function renderStudents(students) {
-            loadingDiv.style.display = "none";
-            tableContainer.style.display = "block";
-            tbody.innerHTML = "";
-
-            if (students.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--muted-color); padding: 2rem;">No students assigned to your account.</td></tr>`;
-                return;
-            }
-
-            students.forEach(s => {
-                const tr = document.createElement("tr");
-
-                let statusBadge = "";
-                if (s.result_status === "PASS") {
-                    statusBadge = `<span class="badge badge-pass">PASS</span>`;
-                } else if (s.result_status === "FAIL") {
-                    statusBadge = `<span class="badge badge-fail">FAIL</span>`;
-                } else {
-                    statusBadge = `<span class="badge badge-incomplete">INCOMPLETE</span>`;
-                }
-
-                const subjectPills = s.assigned_subjects.map(c => `<span class="badge-pill">${c}</span>`).join(" ");
-
-                tr.innerHTML = `
-                    <td><strong>${s.student_code}</strong></td>
-                    <td>${s.full_name}</td>
-                    <td>${s.section}</td>
-                    <td>${s.roll_number}</td>
-                    <td>${subjectPills}</td>
-                    <td>${statusBadge}</td>
-                    <td>
-                        <button type="button" class="btn btn-primary btn-sm btn-edit-student" data-id="${s.id}" data-name="${s.full_name}" data-code="${s.student_code}">
-                            Enter Marks
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            document.querySelectorAll(".btn-edit-student").forEach(btn => {
-                btn.addEventListener("click", function () {
-                    const id = parseInt(this.getAttribute("data-id"));
-                    openMarksModal(id, this);
-                });
-            });
-        }
-
-        async function openMarksModal(studentId, triggerEl) {
-            currentStudentId = studentId;
-            lastFocusedElement = triggerEl || document.activeElement;
-
-            backdrop.classList.add("is-active");
-            backdrop.setAttribute("aria-hidden", "false");
-            modal.focus();
-
-            document.getElementById("marks-modal-loading").style.display = "block";
-            document.getElementById("marks-modal-error").style.display = "none";
-            document.getElementById("marks-modal-success").style.display = "none";
-            document.getElementById("marks-modal-content").style.display = "none";
-
-            try {
-                const response = await fetch(`/api/teacher/students/${studentId}/marks?exam_id=${currentExamId}`, {
-                    headers: { "Accept": "application/json" }
-                });
-
-                if (!response.ok) {
-                    const err = await response.json().catch(() => ({}));
-                    throw new Error(err.error?.message || "Failed to load marks.");
-                }
-
-                const data = await response.json();
-                renderMarksModal(data);
-            } catch (err) {
-                document.getElementById("marks-modal-loading").style.display = "none";
-                const errDiv = document.getElementById("marks-modal-error");
-                errDiv.textContent = err.message;
-                errDiv.style.display = "block";
-            }
-        }
-
-        function renderMarksModal(data) {
-            document.getElementById("marks-modal-loading").style.display = "none";
-            document.getElementById("marks-modal-content").style.display = "block";
-
-            document.getElementById("marks-modal-subtitle").textContent =
-                `Student: ${data.student.full_name} (${data.student.student_code}) — Exam: ${data.exam.name}`;
-
-            updateSummaryDisplay(data.summary);
-
-            const mBody = document.getElementById("marks-table-body");
-            mBody.innerHTML = "";
-
-            data.subjects.forEach(sub => {
-                const tr = document.createElement("tr");
-
-                const editable = sub.editable;
-                const inputHtml = editable
-                    ? `<input type="text" class="input-mark" id="input-sub-${sub.subject_id}" data-sub-id="${sub.subject_id}" data-sub-code="${sub.code}" value="${sub.marks_obtained !== null ? sub.marks_obtained : ''}" placeholder="0 - ${sub.max_marks}">
-                       <span class="field-error-msg" id="error-sub-${sub.subject_id}"></span>`
-                    : `<input type="text" class="input-mark" value="${sub.marks_obtained !== null ? sub.marks_obtained : ''}" disabled title="Not assigned to you">`;
-
-                const permLabel = editable
-                    ? `<span style="color: var(--success-color); font-weight: 600; font-size: 0.8rem;">Assigned (Editable)</span>`
-                    : `<span style="color: var(--muted-color); font-size: 0.8rem;">Read-only</span>`;
-
-                tr.innerHTML = `
-                    <td><strong>${sub.name}</strong> <span class="badge-pill">${sub.code}</span></td>
-                    <td>${sub.max_marks}</td>
-                    <td>${sub.pass_marks}</td>
-                    <td>${inputHtml}</td>
-                    <td>${permLabel}</td>
-                `;
-                mBody.appendChild(tr);
-            });
-        }
-
-        function updateSummaryDisplay(summary) {
-            document.getElementById("modal-res-total").textContent =
-                summary.total_obtained !== null ? `${summary.total_obtained} / ${summary.total_max}` : `— / ${summary.total_max}`;
-            document.getElementById("modal-res-percentage").textContent =
-                summary.percentage !== null ? `${summary.percentage}%` : "—";
-            document.getElementById("modal-res-grade").textContent = summary.grade || "—";
-
-            const statusEl = document.getElementById("modal-res-status");
-            statusEl.textContent = summary.status;
-            if (summary.status === "PASS") {
-                statusEl.innerHTML = `<span class="badge badge-pass">PASS</span>`;
-            } else if (summary.status === "FAIL") {
-                statusEl.innerHTML = `<span class="badge badge-fail">FAIL</span>`;
-            } else {
-                statusEl.innerHTML = `<span class="badge badge-incomplete">INCOMPLETE</span>`;
-            }
-        }
-
-        function closeMarksModal() {
-            backdrop.classList.remove("is-active");
-            backdrop.setAttribute("aria-hidden", "true");
-            if (lastFocusedElement) {
-                lastFocusedElement.focus();
-            }
-        }
-
-        closeBtn.addEventListener("click", closeMarksModal);
-        cancelBtn.addEventListener("click", closeMarksModal);
-
-        document.addEventListener("keydown", function (e) {
-            if (e.key === "Escape" && backdrop.classList.contains("is-active")) {
-                closeMarksModal();
-            }
-        });
-
-        backdrop.addEventListener("click", function (e) {
-            if (e.target === backdrop) {
-                closeMarksModal();
-            }
-        });
-
-        // Save Marks submission
-        saveBtn.addEventListener("click", async function () {
-            // Clear prior errors
-            document.getElementById("marks-modal-error").style.display = "none";
-            document.getElementById("marks-modal-success").style.display = "none";
-            document.querySelectorAll(".field-error-msg").forEach(el => el.textContent = "");
-
-            const inputs = document.querySelectorAll(".input-mark:not(:disabled)");
-            const marksPayload = [];
-
-            inputs.forEach(input => {
-                const subId = parseInt(input.getAttribute("data-sub-id"));
-                const rawVal = input.value.trim();
-                marksPayload.push({
-                    subject_id: subId,
-                    marks_obtained: rawVal === "" ? null : rawVal
-                });
-            });
-
-            saveBtn.disabled = true;
-            const originalBtnText = saveBtn.textContent;
-            saveBtn.textContent = "Saving...";
-
-            try {
-                const response = await fetch(`/api/teacher/students/${currentStudentId}/marks`, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Accept": "application/json",
-                        "X-CSRFToken": csrfToken
-                    },
-                    body: JSON.stringify({
-                        exam_id: currentExamId,
-                        marks: marksPayload
-                    })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    if (response.status === 422 && data.error?.details?.fields) {
-                        // Display field-specific errors
-                        const fields = data.error.details.fields;
-                        inputs.forEach(input => {
-                            const code = input.getAttribute("data-sub-code");
-                            const subId = input.getAttribute("data-sub-id");
-                            if (fields[code]) {
-                                document.getElementById(`error-sub-${subId}`).textContent = fields[code];
-                            }
-                        });
-                        throw new Error("Please correct the highlighted validation errors.");
-                    }
-                    throw new Error(data.error?.message || "Failed to save marks.");
-                }
-
-                // Success
-                const successDiv = document.getElementById("marks-modal-success");
-                successDiv.textContent = `Marks saved successfully! (${data.saved} subject(s) recorded with audit log).`;
-                successDiv.style.display = "block";
-
-                // Update summary in modal
-                if (data.summary) {
-                    updateSummaryDisplay(data.summary);
-                }
-
-                // Refresh main students list
-                loadStudents();
-            } catch (err) {
-                const errDiv = document.getElementById("marks-modal-error");
-                errDiv.textContent = err.message;
-                errDiv.style.display = "block";
-            } finally {
-                saveBtn.disabled = false;
-                saveBtn.textContent = originalBtnText;
-            }
-        });
-    })();
-    </script>
+    <script src="{{ url_for('static', filename='js/teacher_dashboard.js') }}"></script>
 </body>
 </html>

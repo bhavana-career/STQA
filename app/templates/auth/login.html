@@ -11,14 +11,15 @@
     {% endif %}
 </head>
 <body>
-    <header class="site-header">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <header class="site-header" role="banner">
         <div class="container header-container">
             <h1 class="portal-title"><a href="{{ url_for('main.index') }}" style="color: inherit; text-decoration: none;">10th Standard Result Portal</a></h1>
             <span class="badge demo-badge">Demonstration System — Academic Use Only</span>
         </div>
     </header>
 
-    <main class="container main-content">
+    <main class="container main-content" id="main-content" role="main">
         <div class="auth-card-container">
             <div class="card auth-card">
                 <h2 class="auth-card-title">{{ title }}</h2>
@@ -78,16 +79,17 @@
                     </div>
 
                     <div class="form-group captcha-group">
-                        <label>Security Verification</label>
+                        <label id="captcha-label">Security Verification</label>
                         {% if config.get('CAPTCHA_MODE') == 'turnstile' %}
                         <div class="cf-turnstile"
                              data-sitekey="{{ site_key }}"
                              data-action="{{ action }}"
-                             data-theme="light"></div>
+                             data-theme="light"
+                             aria-labelledby="captcha-label"></div>
                         {% else %}
                         <!-- Mock CAPTCHA for unit & automated test suites -->
-                        <div class="mock-captcha-box" style="padding: 10px; border: 1px dashed #ccc; border-radius: 4px; background: #fdfdfd;">
-                            <span style="font-size: 0.85rem; color: #555;">[CAPTCHA Verification Simulation]</span>
+                        <div class="mock-captcha-box" style="padding: 10px; border: 1px dashed #cbd5e1; border-radius: 4px; background: #f8fafc;" aria-labelledby="captcha-label">
+                            <span style="font-size: 0.85rem; color: #475569;">[Automated Testing Security Verification Simulation]</span>
                             <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-response" value="XXXX.DUMMY.TOKEN.XXXX"/>
                         </div>
                         {% endif %}
@@ -104,17 +106,19 @@
                     {% else %}
                     <a href="{{ url_for('auth.student_login') }}">Student Portal Sign In &rarr;</a>
                     {% endif %}
-                    <span style="margin: 0 0.5rem; color: #999;">|</span>
+                    <span style="margin: 0 0.5rem; color: #94a3b8;">|</span>
                     <a href="{{ url_for('main.index') }}">Back to Home</a>
                 </div>
             </div>
         </div>
     </main>
 
-    <footer class="site-footer">
+    <footer class="site-footer" role="contentinfo">
         <div class="container">
             <p>&copy; 2026 SRMS Academic Lab Project. Fictional sample data only.</p>
         </div>
     </footer>
+
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
 </body>
 </html>
