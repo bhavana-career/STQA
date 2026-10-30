@@ -126,16 +126,26 @@ If migrations fail, the deployment is safely halted, preventing inconsistent dat
 ### Provisioning Accounts via Render Shell
 Once the service is active, open the **Shell** tab in the Render Dashboard to create accounts or seed demo data.
 
-#### Option 1: Provision Custom Teacher & Student Accounts
+#### Option 1: Provision Standard Production Student & Teacher Accounts
 ```bash
-# Provision a teacher account (prompts for password securely)
+# Securely provisions Student (4INI23IS036) and Teacher (TCH001) linked for Mathematics
+# Passwords are encrypted and never accepted via command line args to protect shell history
+flask setup-production-accounts
+
+# Or to interactively set custom passwords with hidden input and confirmation:
+flask setup-production-accounts --prompt-passwords
+```
+
+#### Option 2: Provision Custom Teacher & Student Accounts
+```bash
+# Provision a teacher account (prompts for password securely via getpass)
 flask create-user --role teacher --login-id TCH001 --name "Lead Teacher"
 
 # Provision a student account
 flask create-user --role student --login-id STU2026001 --name "Jane Doe" --section A --roll 1
 ```
 
-#### Option 2: Seed Demonstration Dataset Safely
+#### Option 3: Seed Demonstration Dataset Safely
 In production, demo seeding requires explicit confirmation flags and temporary environment passwords:
 ```bash
 DEMO_STUDENT_PASSWORD="YourSecureStudentPassword123!" \
