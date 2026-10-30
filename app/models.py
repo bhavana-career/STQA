@@ -335,3 +335,17 @@ class MarkAudit(db.Model):
 
     def __repr__(self) -> str:
         return f"<MarkAudit id={self.id} mark_id={self.mark_id} action={self.action!r} {self.old_value}->{self.new_value}>"
+
+
+class SystemSetting(db.Model):
+    """System-wide configuration, operational parameters, and one-time state flags."""
+
+    __tablename__ = "system_settings"
+
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    value: Mapped[str] = mapped_column(String(255), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now)
+
+    def __repr__(self) -> str:
+        return f"<SystemSetting key={self.key!r} value={self.value!r}>"
+

@@ -26,6 +26,7 @@ from .models import (
     Teacher,
     TeacherAssignment,
     User,
+    SystemSetting,
 )
 
 
@@ -53,6 +54,7 @@ def register_cli(app: Flask) -> None:
             "teacher_assignments": db.session.scalar(select(db.func.count(TeacherAssignment.id))),
             "marks": db.session.scalar(select(db.func.count(Mark.id))),
             "mark_audit": db.session.scalar(select(db.func.count(MarkAudit.id))),
+            "system_settings": db.session.scalar(select(db.func.count(SystemSetting.key))),
         }
 
         click.echo("--- Database Record Counts ---")

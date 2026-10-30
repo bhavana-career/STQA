@@ -123,20 +123,40 @@ flask db upgrade
 ```
 If migrations fail, the deployment is safely halted, preventing inconsistent database state.
 
-### Provisioning Accounts via Render Shell
-Once the service is active, open the **Shell** tab in the Render Dashboard to create accounts or seed demo data.
+### Initial Account Provisioning
 
-#### Option 1: Provision Standard Production Student & Teacher Accounts
+Render Free tier instances do not support Shell/SSH access. The application provides two secure provisioning methods:
+
+#### Method A: One-Time Authenticated Web Bootstrap (Recommended for Render Free Tier)
+1. Generate a cryptographically secure token ($\ge 32$ characters):
+   ```bash
+   python -c "import secrets; print(secrets.token_urlsafe(32))"
+   ```
+2. In the Render Dashboard under **Environment**, add:
+   - Key: `PROVISIONING_SECRET`
+   - Value: *(your generated token)*
+   Render will automatically redeploy with the secret loaded in memory.
+3. In your browser, navigate to:
+   ```
+   https://<your-render-app>.onrender.com/system/provision
+   ```
+4. Enter the `PROVISIONING_SECRET` and specify custom passwords (min 12 chars, upper, lower, digit, symbol) for Student `4INI23IS036` and Teacher `TCH001`.
+5. Click **Provision Production Accounts**. Upon success:
+   - Accounts and the Mathematics subject assignment are created atomically.
+   - The system permanently writes `bootstrap_completed = true` in the database.
+   - The `/system/provision` endpoint immediately reverts to HTTP 404 stealth mode.
+6. Delete `PROVISIONING_SECRET` from the Render Dashboard environment settings.
+
+#### Method B: Provisioning Accounts via Render Shell (Render Paid Tiers)
+If you are on a paid Render plan with Shell access, open the **Shell** tab:
+
 ```bash
 # Securely provisions Student (4INI23IS036) and Teacher (TCH001) linked for Mathematics
-# Passwords are encrypted and never accepted via command line args to protect shell history
-flask setup-production-accounts
-
-# Or to interactively set custom passwords with hidden input and confirmation:
+# Interactively prompts for passwords using hidden input (getpass) with confirmation:
 flask setup-production-accounts --prompt-passwords
 ```
 
-#### Option 2: Provision Custom Teacher & Student Accounts
+#### Method C: Provision Custom Teacher & Student Accounts (Shell)
 ```bash
 # Provision a teacher account (prompts for password securely via getpass)
 flask create-user --role teacher --login-id TCH001 --name "Lead Teacher"

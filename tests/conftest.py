@@ -41,7 +41,7 @@ def _truncate_all_tables():
         _db.session.execute(
             text(
                 "TRUNCATE TABLE mark_audit, marks, teacher_assignments, "
-                "exam_subjects, exams, students, teachers, subjects, sections, users CASCADE"
+                "exam_subjects, exams, students, teachers, subjects, sections, users, system_settings CASCADE"
             )
         )
         _db.session.commit()
@@ -53,7 +53,8 @@ def _truncate_all_tables():
                 text(
                     "DELETE FROM mark_audit; DELETE FROM marks; DELETE FROM teacher_assignments; "
                     "DELETE FROM exam_subjects; DELETE FROM exams; DELETE FROM students; "
-                    "DELETE FROM teachers; DELETE FROM subjects; DELETE FROM sections; DELETE FROM users;"
+                    "DELETE FROM teachers; DELETE FROM subjects; DELETE FROM sections; DELETE FROM users; "
+                    "DELETE FROM system_settings;"
                 )
             )
             _db.session.commit()
