@@ -167,21 +167,23 @@ Rules from requirements §4.4.1. All maxima 100, pass 35 unless stated.
 
 Live server (thread) on test DB; headless Chrome; explicit waits; screenshot on failure.
 
-| ID | Title | Preconditions | Test data | Steps | Expected result | Pri | Type | Automation | Status (M6) |
+| ID | Title | Preconditions | Test data | Steps | Expected result | Pri | Type | Automation | Status (M7) |
 |---|---|---|---|---|---|---|---|---|---|
-| TC-UI-01 | Login form validation | — | empty fields; ID only | Click Sign in | Inline errors linked to inputs (`aria-describedby`); no navigation | P1 | U,N | E2E | **PASS** (`test_04_invalid_login_displays_error`) |
-| TC-UI-02 | Student login → dashboard | FX; Turnstile test keys (or mock widget) | S1 | Fill, wait token, submit | `/student/dashboard`, heading shows "Test Student One" | P1 | F | E2E | **PASS** (`test_07_student_can_view_result`) |
-| TC-UI-03 | Teacher login → dashboard | FX | T1 | same | `/teacher/dashboard`, list contains `STU_T001` only | P1 | F | E2E | **PASS** (`test_08_teacher_can_view_assigned_students`) |
-| TC-UI-04 | Student result rendering | S1 marks 78,65,90,55,42 | — | Open dashboard, click "View detailed result" | Modal shows 5 rows, total 330 / 500, 66.00 %, B2, PASS, demo-data label | P1 | F | E2E | **PASS** (`test_07_student_can_view_result`) |
-| TC-UI-05 | Modal keyboard accessibility | logged-in S1 | — | Tab to button, Enter, Esc | Modal opens with focus inside, Esc closes and focus returns to button | P3 | U | E2E | **PASS** (`test_10_result_modal_opens_and_closes_accessibly`) |
-| TC-UI-06 | Teacher marks entry & update | T1 logged in | S1 ENG 81, MAT 92.5 | Select S1, enter, Save, reload page | "Marks saved" message; values persist after reload; summary updated | P1 | F,P | E2E | **PASS** (`test_09_teacher_can_submit_valid_marks`) |
-| TC-UI-07 | Logout | S1 logged in | — | Click Logout; browser Back; open dashboard URL | Landing page with "logged out"; dashboard redirects to login | P1 | S | E2E | **PASS** (`test_05_student_dashboard_is_protected`) |
-| TC-UI-08 | Unauthorized navigation | S1 logged in; also anonymous | — | Open `/teacher/dashboard` | 403 page for S1; login page for anonymous | P1 | S | E2E | **PASS** (`test_06_teacher_dashboard_is_protected`) |
-| TC-UI-09 | Invalid mark input feedback | T1 | ENG `101`, MAT `-1`, `abc` | Save | Inline errors per field, nothing saved (reload shows old values) | P2 | N | E2E | Planned for M7 E2E Suite |
-| TC-UI-10 | Loading states | T1; Chrome network throttling via `driver.set_network_conditions` (latency 1500 ms) | — | Click Save / Sign in | Button disabled with "Saving…"/"Signing in…" text while pending, re-enabled after | P3 | U | E2E | Planned for M7 E2E Suite |
-| TC-UI-11 | Wrong password message | — | S1 wrong pw | Submit | "Invalid ID or password." in `role="alert"` region | P2 | N | E2E | **PASS** (`test_04_invalid_login_displays_error`) |
+| TC-UI-01 | Login form validation | — | empty fields; ID only | Click Sign in | Inline errors linked to inputs (`aria-describedby`); no navigation | P1 | U,N | E2E | **PASS** (`test_04_invalid_login_displays_error`, `test_student_invalid_credentials_rejected`) |
+| TC-UI-02 | Student login → dashboard | FX; Turnstile test keys (or mock widget) | S1 | Fill, wait token, submit | `/student/dashboard`, heading shows student profile | P1 | F | E2E | **PASS** (`test_student_complete_success_journey`) |
+| TC-UI-03 | Teacher login → dashboard | FX | T1 | same | `/teacher/dashboard`, list contains assigned students only | P1 | F | E2E | **PASS** (`test_teacher_complete_workflow_and_audit_persistence`) |
+| TC-UI-04 | Student result rendering | S1 marks 78.5,65,90,55,42 | — | Open dashboard, click "View detailed result" | Modal shows 5 rows, total 330.5 / 500, 66.10 %, B2, PASS | P1 | F | E2E | **PASS** (`test_student_complete_success_journey`) |
+| TC-UI-05 | Modal keyboard accessibility | logged-in S1 | — | Tab to button, Enter, Esc | Modal opens with focus inside, Esc closes and focus returns | P3 | U | E2E | **PASS** (`test_student_complete_success_journey`, `test_10_result_modal_opens_and_closes_accessibly`) |
+| TC-UI-06 | Teacher marks entry & update | T1 logged in | S1 ENG 85.5, MAT 95.0 | Select S1, enter, Save, verify DB & student view | "Marks saved" message; values persist in Postgres; audit trail recorded | P1 | F,P | E2E | **PASS** (`test_teacher_complete_workflow_and_audit_persistence`) |
+| TC-UI-07 | Logout & session invalidation | S1 logged in | — | Click Logout; browser Back; open dashboard URL | Landing page with session cleared; dashboard redirects to login | P1 | S | E2E | **PASS** (`test_student_complete_success_journey`, `test_05_student_dashboard_is_protected`) |
+| TC-UI-08 | Unauthorized navigation | S1 logged in; also anonymous | — | Open `/teacher/dashboard` | 403 Forbidden for S1; login page for anonymous | P1 | S | E2E | **PASS** (`test_portal_role_boundary_enforcement`, `test_unauthenticated_protected_route_redirection`) |
+| TC-UI-09 | Invalid mark input feedback | T1 | ENG `100.5`, `-0.5`, `55.25`, `abc` | Save | Inline errors per field, nothing saved; no audit record created | P2 | N | E2E | **PASS** (`test_marks_invalid_boundary_values_rejected`) |
+| TC-UI-10 | Valid boundary marks | T1 | ENG `0.0`, MAT `100.0`, `55.5` | Save | Values saved and verified in PostgreSQL; audit recorded | P1 | F,B | E2E | **PASS** (`test_marks_valid_boundary_values`) |
+| TC-UI-11 | Wrong password message | — | S1 wrong pw | Submit | "Invalid ID or password." in `role="alert"` region | P2 | N | E2E | **PASS** (`test_student_invalid_credentials_rejected`, `test_04_invalid_login_displays_error`) |
 | TC-UI-12 | Responsive layout | — | viewport 375×812 | Load login + dashboards | No horizontal scroll (`scrollWidth ≤ clientWidth`); form usable | P3 | U | E2E | **PASS** (`test_01_home_page_loads`) |
-| TC-UI-13 | Error state on network failure | T1; offline network condition | — | Save | "Network error — marks not saved" message | P3 | N | E2E | Planned for M7 E2E Suite |
+| TC-UI-13 | Teacher clear marks confirmation | T1 logged in | S1 ENG cleared | Save with dismiss/confirm | Cancelling aborts; confirming saves null and sets INCOMPLETE | P2 | U,F | E2E | **PASS** (`test_teacher_marks_clearing_confirmation_and_cancellation`) |
+| TC-UI-14 | Unassigned student API tampering | T1 logged in | PUT to Bob (unassigned) | Direct fetch from browser | 404/403 Rejected ("not assigned"); DB unchanged | P1 | S | E2E | **PASS** (`test_teacher_cannot_modify_unassigned_student_via_api`) |
+| TC-UI-15 | Student isolation tampering | S1 logged in | Query Bob's ID via API | Fetch from browser | Ignored query params; only own results returned | P1 | S | E2E | **PASS** (`test_student_cannot_access_another_students_result`) |
 
 ## 9. Operations (TC-OPS)
 

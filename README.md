@@ -100,16 +100,34 @@ pytest -m unit
 pytest -m integration
 ```
 
-### 3. Selenium WebDriver End-to-End (E2E) Smoke Tests
-Headless Chrome browser automation using Selenium WebDriver:
+### 3. Selenium WebDriver End-to-End (E2E) Automation (Page Object Model)
+Headless Chrome browser automation using Selenium WebDriver and structured Page Objects (`tests/e2e/pages/`):
+
+#### Page Object Model (POM) Architecture:
+- `BasePage` (`tests/e2e/pages/base_page.py`): Common driver wrappers, explicit waits (`WebDriverWait`), click/type/text abstractions.
+- `HomePage` (`tests/e2e/pages/home_page.py`): Landing page navigation, portal link interactions.
+- `LoginPage` (`tests/e2e/pages/login_page.py`): Student and teacher login forms, credential submission, error alerts.
+- `StudentDashboardPage` (`tests/e2e/pages/student_dashboard_page.py`): Student profile, exam results view, logout.
+- `TeacherDashboardPage` (`tests/e2e/pages/teacher_dashboard_page.py`): Assigned student roster, marks entry trigger, logout.
+- `ResultModal` (`tests/e2e/pages/result_modal.py`): Accessible statement of marks dialog, summary statistics, keyboard Esc close.
+- `MarksEntryModal` (`tests/e2e/pages/marks_entry_modal.py`): Marks entry form, assigned/read-only validation, save confirmation.
+
+#### Running E2E Test Suites:
 ```powershell
-pytest tests/e2e/test_smoke.py -v
+# Run the complete E2E test suite (22 browser tests)
+pytest tests/e2e/ -v
+
+# Run individual user journey suites
+pytest tests/e2e/test_smoke.py -v                  # Smoke tests (10 tests)
+pytest tests/e2e/test_student_journey.py -v        # Student user journeys (5 tests)
+pytest tests/e2e/test_teacher_journey.py -v        # Teacher user journeys & audit verification (3 tests)
+pytest tests/e2e/test_boundaries_and_security.py -v # Boundary values, input validation & security (4 tests)
 ```
-*Note: Requires Google Chrome or Chromium installed. Selenium Manager automatically resolves and provisions the matching chromedriver binary. In case of any test assertion or timeout failure, an automated full-page screenshot artifact is automatically saved to `reports/screenshots/<test_name>.png`.*
+*Note: Requires Google Chrome or Chromium installed. Selenium Manager automatically provisions the matching chromedriver. In case of any assertion or timeout failure, automated screenshot artifacts (`reports/screenshots/<test_name>.png`) and browser console logs (`reports/screenshots/<test_name>_browser.log`) are captured automatically.*
 
 ### 4. Full Automated Test Suite with Statement & Branch Coverage
 ```powershell
-pytest -v --cov=app --cov-branch --cov-report=term-missing --cov-report=html:reports/coverage --html=reports/test_report.html --self-contained-html
+pytest -v --cov=app --cov-branch --cov-report=term-missing --cov-report=html:reports/coverage --html=reports/m7_report.html --self-contained-html
 ```
 
 ### 5. Controlled Fault-Injection Defect Demonstrations

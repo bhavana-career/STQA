@@ -35,8 +35,9 @@ DEFAULT_TEST_ENV = {
 
 
 def _truncate_all_tables():
-    """Truncate PostgreSQL test tables to guarantee isolation."""
+    """Truncate PostgreSQL test tables to guarantee isolation with timeout protection."""
     try:
+        _db.session.execute(text("SET lock_timeout = '5s'"))
         _db.session.execute(
             text(
                 "TRUNCATE TABLE mark_audit, marks, teacher_assignments, "
@@ -46,6 +47,18 @@ def _truncate_all_tables():
         _db.session.commit()
     except Exception:
         _db.session.rollback()
+        try:
+            _db.session.execute(text("SET lock_timeout = '5s'"))
+            _db.session.execute(
+                text(
+                    "DELETE FROM mark_audit; DELETE FROM marks; DELETE FROM teacher_assignments; "
+                    "DELETE FROM exam_subjects; DELETE FROM exams; DELETE FROM students; "
+                    "DELETE FROM teachers; DELETE FROM subjects; DELETE FROM sections; DELETE FROM users;"
+                )
+            )
+            _db.session.commit()
+        except Exception:
+            _db.session.rollback()
 
 
 @pytest.fixture
@@ -148,7 +161,7 @@ def live_server(pg_test_db_url: str) -> Generator[str, None, None]:
         s.bind(("127.0.0.1", 0))
         port = s.getsockname()[1]
 
-    server = make_server("127.0.0.1", port, test_app)
+    server = make_server("127.0.0.1", port, test_app, threaded=True)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
 
@@ -164,6 +177,20 @@ def live_server(pg_test_db_url: str) -> Generator[str, None, None]:
 
     server.shutdown()
     thread.join(timeout=3)
+
+
+@pytest.fixture
+def e2e_db_session(pg_test_db_url: str):
+    """Provide an isolated, read-only/verification SQLAlchemy session for E2E tests."""
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import scoped_session, sessionmaker
+
+    engine = create_engine(pg_test_db_url, pool_pre_ping=True)
+    session_factory = sessionmaker(bind=engine)
+    session = scoped_session(session_factory)
+    yield session
+    session.remove()
+    engine.dispose()
 
 
 @pytest.fixture
@@ -189,7 +216,7 @@ def selenium_driver(request) -> Generator[webdriver.Chrome, None, None]:
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-    """Automatically capture screenshot on test failure for Selenium tests."""
+    """Automatically capture screenshot and browser console logs on test failure for Selenium tests."""
     outcome = yield
     report = outcome.get_result()
     if report.when == "call" and report.failed:
@@ -202,11 +229,19 @@ def pytest_runtest_makereport(item, call):
                 driver.save_screenshot(screenshot_path)
             except Exception:
                 pass
+            log_path = os.path.join(screenshots_dir, f"{item.name}_browser.log")
+            try:
+                logs = driver.get_log("browser")
+                with open(log_path, "w", encoding="utf-8") as f:
+                    for entry in logs:
+                        f.write(f"{entry}\n")
+            except Exception:
+                pass
 
 
 @pytest.fixture
 def e2e_seeded_data(live_server: str, pg_test_db_url: str):
-    """Seed test student (STU2026001), teacher (TCH001), 5 subjects, exam, and marks."""
+    """Seed test student (STU2026001), incomplete student (STU2026002), teacher (TCH001), 5 subjects, exam, and marks."""
     test_env = dict(DEFAULT_TEST_ENV)
     test_env["DATABASE_URL"] = pg_test_db_url
     test_env["TEST_DATABASE_URL"] = pg_test_db_url
@@ -227,9 +262,11 @@ def e2e_seeded_data(live_server: str, pg_test_db_url: str):
         # Users
         u_student = User(login_id="STU2026001", role="student")
         u_student.set_password("StudentPass123!")
+        u_student2 = User(login_id="STU2026002", role="student")
+        u_student2.set_password("StudentPass123!")
         u_teacher = User(login_id="TCH001", role="teacher")
         u_teacher.set_password("TeacherPass123!")
-        _db.session.add_all([u_student, u_teacher])
+        _db.session.add_all([u_student, u_student2, u_teacher])
         _db.session.flush()
 
         # Profiles
@@ -240,12 +277,19 @@ def e2e_seeded_data(live_server: str, pg_test_db_url: str):
             section_id=sec.id,
             roll_number=1,
         )
+        student2 = Student(
+            user_id=u_student2.id,
+            student_code="STU2026002",
+            full_name="Bob Student",
+            section_id=sec.id,
+            roll_number=2,
+        )
         teacher = Teacher(
             user_id=u_teacher.id,
             teacher_code="TCH001",
             full_name="Robert Teacher",
         )
-        _db.session.add_all([student, teacher])
+        _db.session.add_all([student, student2, teacher])
         _db.session.flush()
 
         # Subjects
@@ -271,14 +315,14 @@ def e2e_seeded_data(live_server: str, pg_test_db_url: str):
         _db.session.add_all(exam_subjects)
         _db.session.flush()
 
-        # Teacher Assignments (TCH001 assigned to STU2026001 for ENG and MAT)
+        # Teacher Assignments (TCH001 assigned to STU2026001 for ENG and MAT ONLY; NOT assigned to STU2026002)
         assignments = [
             TeacherAssignment(teacher_id=teacher.id, student_id=student.id, subject_id=subjects[0].id),
             TeacherAssignment(teacher_id=teacher.id, student_id=student.id, subject_id=subjects[2].id),
         ]
         _db.session.add_all(assignments)
 
-        # Initial Marks (Total: 330.50 / 500, PASS)
+        # Initial Marks for Alice (STU2026001) - Complete (Total: 330.50 / 500, PASS)
         marks = [
             Mark(student_id=student.id, exam_subject_id=exam_subjects[0].id, marks_obtained=Decimal("78.50"), updated_by=u_teacher.id),
             Mark(student_id=student.id, exam_subject_id=exam_subjects[1].id, marks_obtained=Decimal("65.00"), updated_by=u_teacher.id),
@@ -286,13 +330,22 @@ def e2e_seeded_data(live_server: str, pg_test_db_url: str):
             Mark(student_id=student.id, exam_subject_id=exam_subjects[3].id, marks_obtained=Decimal("55.00"), updated_by=u_teacher.id),
             Mark(student_id=student.id, exam_subject_id=exam_subjects[4].id, marks_obtained=Decimal("42.00"), updated_by=u_teacher.id),
         ]
-        _db.session.add_all(marks)
+
+        # Partial Marks for Bob (STU2026002) - Incomplete (Only ENG and MAT entered)
+        partial_marks = [
+            Mark(student_id=student2.id, exam_subject_id=exam_subjects[0].id, marks_obtained=Decimal("65.00"), updated_by=u_teacher.id),
+            Mark(student_id=student2.id, exam_subject_id=exam_subjects[2].id, marks_obtained=Decimal("75.00"), updated_by=u_teacher.id),
+        ]
+
+        _db.session.add_all(marks + partial_marks)
         _db.session.commit()
 
         yield {
             "student_id": student.id,
+            "student2_id": student2.id,
             "teacher_id": teacher.id,
             "student_user_id": u_student.id,
+            "student2_user_id": u_student2.id,
             "teacher_user_id": u_teacher.id,
             "exam_id": exam.id,
             "subjects": {s.code: s.id for s in subjects},

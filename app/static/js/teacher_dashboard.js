@@ -161,7 +161,7 @@
             const inputHtml = editable
                 ? `<input type="text" class="input-mark" id="input-sub-${sub.subject_id}" data-sub-id="${sub.subject_id}" data-sub-code="${sub.code}" value="${currentVal}" placeholder="0 - ${sub.max_marks}" aria-label="${sub.name} marks obtained" aria-describedby="error-sub-${sub.subject_id}">
                    <span class="field-error-msg" id="error-sub-${sub.subject_id}" role="alert"></span>`
-                : `<input type="text" class="input-mark" value="${currentVal}" disabled title="Not assigned to you" aria-label="${sub.name} marks obtained (read-only)">`;
+                : `<input type="text" class="input-mark" id="input-sub-${sub.subject_id}" data-sub-id="${sub.subject_id}" data-sub-code="${sub.code}" value="${currentVal}" disabled title="Not assigned to you" aria-label="${sub.name} marks obtained (read-only)">`;
 
             const permLabel = editable
                 ? `<span style="color: var(--success-color); font-weight: 700; font-size: 0.8rem;">Assigned (Editable)</span>`
