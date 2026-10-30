@@ -31,62 +31,62 @@ Unless stated, **PC-STD** = "test DB migrated, FX loaded, app in `testing` confi
 
 ## 1. Authentication (TC-AUTH)
 
-| ID | Title | Preconditions | Test data | Steps | Expected result | Pri | Type | Automation |
-|---|---|---|---|---|---|---|---|---|
-| TC-AUTH-01 | Valid student login | PC-STD | `STU_T001` / correct pw / valid token | POST `/student/login` | 302 → `/student/dashboard`; session has user S1; `failed_login_count`=0; `last_login_at` set | P1 | F | Integration + E2E (TC-UI-02) |
-| TC-AUTH-02 | Valid teacher login | PC-STD | `TCH_T001` / correct pw | POST `/teacher/login` | 302 → `/teacher/dashboard` | P1 | F | Integration + E2E (TC-UI-03) |
-| TC-AUTH-03 | Invalid ID or password — same message | PC-STD | (a) `STU_NOPE`/any (b) `STU_T001`/wrong | POST each | 401; identical body message "Invalid ID or password."; no session | P1 | N | Integration |
-| TC-AUTH-04 | Empty login fields | PC-STD | (a) both empty (b) ID only (c) pw only (d) whitespace-only ID | POST each | 400; field errors; CAPTCHA verifier **not called** | P1 | N | Integration |
-| TC-AUTH-05 | Missing CAPTCHA token | PC-STD | valid creds, no `cf-turnstile-response` | POST | 400 "Please complete the CAPTCHA."; no session; failed counter unchanged | P1 | N,S | Integration |
-| TC-AUTH-06 | Invalid CAPTCHA token | Mock returns `success:false, error-codes:[invalid-input-response]` | valid creds | POST | 400 "CAPTCHA verification failed…"; no session | P1 | N,S | Integration |
-| TC-AUTH-07 | Expired / reused CAPTCHA token | Mock returns `timeout-or-duplicate` | valid creds | POST | 400 CAPTCHA failed; no session | P1 | N,S | Integration |
-| TC-AUTH-08 | CAPTCHA service failure | Mock raises `requests.Timeout` / `ConnectionError` | valid creds | POST | 503 "Verification service unavailable"; no session (fail closed) | P1 | N,S | Integration |
-| TC-AUTH-09 | Logout invalidates session | S1 logged in; copy session cookie | — | POST `/logout` with CSRF; then GET `/student/dashboard` with **old** cookie | Logout 302 → `/`; old cookie → 302 to login (session_version mismatch); `session_version` incremented | P1 | S | Integration + E2E (TC-UI-07) |
-| TC-AUTH-10 | Session idle expiry | `SESSION_LIFETIME_MINUTES` set to 1 in test; S1 logged in | freeze/advance time 61 s | GET dashboard; GET `/api/student/result` | Page 302 → login; API 401 JSON | P2 | S,B | Integration |
-| TC-AUTH-11 | Unauthenticated page access | Anonymous | — | GET `/student/dashboard`, `/teacher/dashboard` | 302 → respective login with safe `next` | P1 | S | Integration + E2E |
-| TC-AUTH-12 | Repeated failed logins → lockout | PC-STD; `LOGIN_MAX_ATTEMPTS=5`, 15 min | wrong pw ×4, ×5, ×6; then correct pw; then advance 15 min + 1 s and correct pw | POST sequentially | Attempts 1–5 → 401 (5th sets `locked_until`); 6th and correct-pw-while-locked → 429; after expiry correct pw → 302 and counter reset | P1 | S,B | Integration |
-| TC-AUTH-13 | Role mismatch on login page | PC-STD | S1 creds on `/teacher/login`; T1 creds on `/student/login` | POST | 401 generic message; counts as a failed attempt | P1 | S | Integration |
-| TC-AUTH-14 | Inactive account | S1 `is_active=false` | correct pw | POST | 401 generic | P3 | N | Integration |
-| TC-AUTH-15 | Login ID case-insensitive, trimmed | PC-STD | `  stu_t001 ` | POST | 302 success | P3 | F | Integration |
-| TC-AUTH-16 | Oversized inputs | PC-STD | ID 33 chars; pw 129 chars | POST | 400 validation; no DB lookup error | P3 | N,B | Integration |
+| ID | Title | Preconditions | Test data | Steps | Expected result | Pri | Type | Automation | Status (M4) |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-AUTH-01 | Valid student login | PC-STD | `STU_T001` / correct pw / valid token | POST `/student/login` | 302 → `/student/dashboard`; session has user S1; `failed_login_count`=0; `last_login_at` set | P1 | F | Integration + E2E (TC-UI-02) | **PASS** (`test_tc_auth_01_valid_student_login`) |
+| TC-AUTH-02 | Valid teacher login | PC-STD | `TCH_T001` / correct pw | POST `/teacher/login` | 302 → `/teacher/dashboard` | P1 | F | Integration + E2E (TC-UI-03) | **PASS** (`test_tc_auth_02_valid_teacher_login`) |
+| TC-AUTH-03 | Invalid ID or password — same message | PC-STD | (a) `STU_NOPE`/any (b) `STU_T001`/wrong | POST each | 401; identical body message "Invalid ID or password."; no session | P1 | N | Integration | **PASS** (`test_tc_auth_03_invalid_id_or_password_non_revealing`) |
+| TC-AUTH-04 | Empty login fields | PC-STD | (a) both empty (b) ID only (c) pw only (d) whitespace-only ID | POST each | 400; field errors; CAPTCHA verifier **not called** | P1 | N | Integration | **PASS** (`test_tc_auth_04_empty_login_fields`) |
+| TC-AUTH-05 | Missing CAPTCHA token | PC-STD | valid creds, no `cf-turnstile-response` | POST | 400 "Please complete the CAPTCHA."; no session; failed counter unchanged | P1 | N,S | Integration | **PASS** (`test_tc_auth_05_missing_captcha_token`) |
+| TC-AUTH-06 | Invalid CAPTCHA token | Mock returns `success:false, error-codes:[invalid-input-response]` | valid creds | POST | 400 "CAPTCHA verification failed…"; no session | P1 | N,S | Integration | **PASS** (`test_tc_auth_06_invalid_captcha_token`) |
+| TC-AUTH-07 | Expired / reused CAPTCHA token | Mock returns `timeout-or-duplicate` | valid creds | POST | 400 CAPTCHA failed; no session | P1 | N,S | Integration | **PASS** (`test_tc_auth_07_expired_captcha_token`) |
+| TC-AUTH-08 | CAPTCHA service failure | Mock raises `requests.Timeout` / `ConnectionError` | valid creds | POST | 503 "Verification service unavailable"; no session (fail closed) | P1 | N,S | Integration | **PASS** (`test_tc_auth_08_captcha_service_unavailable`) |
+| TC-AUTH-09 | Logout invalidates session | S1 logged in; copy session cookie | — | POST `/logout` with CSRF; then GET `/student/dashboard` with **old** cookie | Logout 302 → `/`; old cookie → 302 to login (session_version mismatch); `session_version` incremented | P1 | S | Integration + E2E (TC-UI-07) | **PASS** (`test_tc_auth_09_logout_invalidates_session`) |
+| TC-AUTH-10 | Session idle expiry | `SESSION_LIFETIME_MINUTES` set to 1 in test; S1 logged in | freeze/advance time 61 s | GET dashboard; GET `/api/student/result` | Page 302 → login; API 401 JSON | P2 | S,B | Integration | **PASS** (`test_tc_auth_10_session_idle_expiry`) |
+| TC-AUTH-11 | Unauthenticated page access | Anonymous | — | GET `/student/dashboard`, `/teacher/dashboard` | 302 → respective login with safe `next` | P1 | S | Integration + E2E | **PASS** (`test_tc_auth_11_unauthenticated_page_access_redirects`) |
+| TC-AUTH-12 | Repeated failed logins → lockout | PC-STD; `LOGIN_MAX_ATTEMPTS=5`, 15 min | wrong pw ×4, ×5, ×6; then correct pw; then advance 15 min + 1 s and correct pw | POST sequentially | Attempts 1–5 → 401 (5th sets `locked_until`); 6th and correct-pw-while-locked → 429; after expiry correct pw → 302 and counter reset | P1 | S,B | Integration | **PASS** (`test_tc_auth_12_account_lockout_policy`, `test_teacher_account_lockout`) |
+| TC-AUTH-13 | Role mismatch on login page | PC-STD | S1 creds on `/teacher/login`; T1 creds on `/student/login` | POST | 401 generic message; counts as a failed attempt | P1 | S | Integration | **PASS** (`test_tc_auth_13_role_mismatch_on_login_pages`) |
+| TC-AUTH-14 | Inactive account | S1 `is_active=false` | correct pw | POST | 401 generic | P3 | N | Integration | **PASS** (`test_tc_auth_14_inactive_account_rejected`) |
+| TC-AUTH-15 | Login ID case-insensitive, trimmed | PC-STD | `  stu_t001 ` | POST | 302 success | P3 | F | Integration | **PASS** (`test_tc_auth_15_case_insensitive_and_trimmed_login_id`) |
+| TC-AUTH-16 | Oversized inputs | PC-STD | ID 33 chars; pw 129 chars | POST | 400 validation; no DB lookup error | P3 | N,B | Integration | **PASS** (`test_tc_auth_16_oversized_inputs_rejected`) |
 
 ## 2. CAPTCHA (TC-CAP)
 
-| ID | Title | Preconditions | Test data | Steps | Expected result | Pri | Type | Automation |
-|---|---|---|---|---|---|---|---|---|
-| TC-CAP-01 | Verifier success parsing | `requests.post` mocked → 200 `{"success":true,"hostname":"localhost","action":"login"}` | token `abc` | `TurnstileVerifier.verify("abc", "1.2.3.4")` | Returns `ok=True` | P1 | F | Unit |
-| TC-CAP-02 | Missing/blank token short-circuits | — | `None`, `""`, `"   "` | verify | `ok=False, reason="missing-input-response"`; **no HTTP call** | P1 | N | Unit |
-| TC-CAP-03 | Invalid token | mocked `success:false, invalid-input-response` | — | verify | `ok=False, reason="invalid-input-response"` | P1 | N | Unit |
-| TC-CAP-04 | Expired/duplicate token | mocked `timeout-or-duplicate` | — | verify | `ok=False` | P1 | N | Unit |
-| TC-CAP-05 | Hostname mismatch | mocked success, hostname `evil.example` | `ALLOWED_HOSTNAMES=localhost` | verify | `ok=False, reason="hostname-mismatch"` | P2 | S | Unit |
-| TC-CAP-06 | Action mismatch | mocked success, action `signup` | — | verify | `ok=False` | P2 | S | Unit |
-| TC-CAP-07 | Network failure / timeout | mocked raise `Timeout`, `ConnectionError` | — | verify | `ok=False, unavailable=True` (→ 503 at route) | P1 | N | Unit |
-| TC-CAP-08 | Non-200 / malformed JSON / missing `success` | mocked 500; 200 with `text/html`; `{}` | — | verify | `ok=False, unavailable=True`; never `ok=True` | P1 | N | Unit |
-| TC-CAP-09 | Request format | mocked | token `t`, ip `1.2.3.4` | verify | POST to `https://challenges.cloudflare.com/turnstile/v0/siteverify` with `secret`, `response`, `remoteip`, `idempotency_key`; `timeout=5` | P2 | F | Unit |
-| TC-CAP-10 | Mock mode blocked outside testing | — | `APP_ENV=production/development`, `CAPTCHA_MODE=mock` | `create_app()` | Raises `ConfigError` | P1 | S | Unit |
-| TC-CAP-11 | Test keys blocked in production | — | `APP_ENV=production`, site `1x00000000000000000000AA` or secret `1x0000…AA`/`2x…`/`3x…`; missing keys | `create_app()` | Raises `ConfigError` | P1 | S | Unit |
-| TC-CAP-12 | E2E pass with Turnstile test keys | Live server, site `1x00000000000000000000AA`, secret `1x0000000000000000000000000000000AA`, internet | S1 creds | Open login, wait for widget token, submit | Dashboard shown | P1 | F | E2E (`captcha_live`) |
-| TC-CAP-13 | E2E rejection with always-fail secret | secret `2x0000000000000000000000000000000AA` | S1 creds | Same | "CAPTCHA verification failed" shown; still on login page | P1 | N | E2E (`captcha_live`) |
-| TC-CAP-14 | E2E spent-token secret | secret `3x0000000000000000000000000000000AA` | S1 creds | Same | CAPTCHA failed message | P2 | N | E2E (`captcha_live`) |
-| TC-CAP-15 | E2E blocked widget | site `2x00000000000000000000AB` | S1 creds | Submit | No token → client message "Please complete the CAPTCHA"; server 400 if forced | P2 | N | E2E (`captcha_live`) |
-| TC-CAP-16 | Offline E2E with mock widget | `APP_ENV=testing`, `CAPTCHA_MODE=mock`; stub widget sets token `mock-pass` / `mock-fail` | — | Login with each | pass → dashboard, fail → error | P2 | F | E2E |
+| ID | Title | Preconditions | Test data | Steps | Expected result | Pri | Type | Automation | Status (M4) |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-CAP-01 | Verifier success parsing | `requests.post` mocked → 200 `{"success":true,"hostname":"localhost","action":"login"}` | token `abc` | `TurnstileVerifier.verify("abc", "1.2.3.4")` | Returns `ok=True` | P1 | F | Unit | **PASS** (`test_tc_cap_01_and_09_turnstile_success_and_request_format`) |
+| TC-CAP-02 | Missing/blank token short-circuits | — | `None`, `""`, `"   "` | verify | `ok=False, reason="missing-input-response"`; **no HTTP call** | P1 | N | Unit | **PASS** (`test_tc_cap_02_blank_token_short_circuits`) |
+| TC-CAP-03 | Invalid token | mocked `success:false, invalid-input-response` | — | verify | `ok=False, reason="invalid-input-response"` | P1 | N | Unit | **PASS** (`test_tc_cap_03_invalid_token`) |
+| TC-CAP-04 | Expired/duplicate token | mocked `timeout-or-duplicate` | — | verify | `ok=False` | P1 | N | Unit | **PASS** (`test_tc_cap_04_expired_or_duplicate_token`) |
+| TC-CAP-05 | Hostname mismatch | mocked success, hostname `evil.example` | `ALLOWED_HOSTNAMES=localhost` | verify | `ok=False, reason="hostname-mismatch"` | P2 | S | Unit | **PASS** (`test_tc_cap_05_hostname_mismatch`) |
+| TC-CAP-06 | Action mismatch | mocked success, action `signup` | — | verify | `ok=False` | P2 | S | Unit | **PASS** (`test_tc_cap_06_action_mismatch`) |
+| TC-CAP-07 | Network failure / timeout | mocked raise `Timeout`, `ConnectionError` | — | verify | `ok=False, unavailable=True` (→ 503 at route) | P1 | N | Unit | **PASS** (`test_tc_cap_07_network_failure_or_timeout`) |
+| TC-CAP-08 | Non-200 / malformed JSON / missing `success` | mocked 500; 200 with `text/html`; `{}` | — | verify | `ok=False, unavailable=True`; never `ok=True` | P1 | N | Unit | **PASS** (`test_tc_cap_08_malformed_responses`) |
+| TC-CAP-09 | Request format | mocked | token `t`, ip `1.2.3.4` | verify | POST to `https://challenges.cloudflare.com/turnstile/v0/siteverify` with `secret`, `response`, `remoteip`, `idempotency_key`; `timeout=5` | P2 | F | Unit | **PASS** (`test_tc_cap_01_and_09_turnstile_success_and_request_format`) |
+| TC-CAP-10 | Mock mode blocked outside testing | — | `APP_ENV=production/development`, `CAPTCHA_MODE=mock` | `create_app()` | Raises `ConfigError` | P1 | S | Unit | **PASS** (`test_mock_captcha_blocked_in_non_testing`) |
+| TC-CAP-11 | Test keys blocked in production | — | `APP_ENV=production`, site `1x00000000000000000000AA` or secret `1x0000…AA`/`2x…`/`3x…`; missing keys | `create_app()` | Raises `ConfigError` | P1 | S | Unit | **PASS** (`test_turnstile_test_keys_blocked_in_production`) |
+| TC-CAP-12 | E2E pass with Turnstile test keys | Live server, site `1x00000000000000000000AA`, secret `1x0000000000000000000000000000000AA`, internet | S1 creds | Open login, wait for widget token, submit | Dashboard shown | P1 | F | E2E (`captcha_live`) | Deferred to M7 (Selenium E2E) |
+| TC-CAP-13 | E2E rejection with always-fail secret | secret `2x0000000000000000000000000000000AA` | S1 creds | Same | "CAPTCHA verification failed" shown; still on login page | P1 | N | E2E (`captcha_live`) | Deferred to M7 |
+| TC-CAP-14 | E2E spent-token secret | secret `3x0000000000000000000000000000000AA` | S1 creds | Same | CAPTCHA failed message | P2 | N | E2E (`captcha_live`) | Deferred to M7 |
+| TC-CAP-15 | E2E blocked widget | site `2x00000000000000000000AB` | S1 creds | Submit | No token → client message "Please complete the CAPTCHA"; server 400 if forced | P2 | N | E2E (`captcha_live`) | Deferred to M7 |
+| TC-CAP-16 | Offline E2E with mock widget | `APP_ENV=testing`, `CAPTCHA_MODE=mock`; stub widget sets token `mock-pass` / `mock-fail` | — | Login with each | pass → dashboard, fail → error | P2 | F | E2E | Deferred to M7 |
 
 ## 3. Authorization (TC-AUTHZ)
 
-| ID | Title | Preconditions | Test data | Steps | Expected result | Pri | Type | Automation |
-|---|---|---|---|---|---|---|---|---|
-| TC-AUTHZ-01 | Student → teacher dashboard | S1 logged in | — | GET `/teacher/dashboard`, `/api/teacher/students` | Page 403 template; API 403 JSON | P1 | S | Integration + E2E (TC-UI-08) |
-| TC-AUTHZ-02 | Student attempts to edit marks | S1 logged in | valid PUT body for S1 | PUT `/api/teacher/students/<S1.id>/marks` | 403; marks unchanged; no audit row | P1 | S | Integration |
-| TC-AUTHZ-03 | Student requests another student's result via param | S1 logged in | `?student_id=<S2.id>`, `?student_code=STU_T002` | GET `/api/student/result…` | 200 with **S1's** data only; no S2 data in body | P1 | S | Integration |
-| TC-AUTHZ-04 | Student tries teacher marks URL for other student | S1 logged in | S2 id | GET `/api/teacher/students/<S2.id>/marks` | 403 | P1 | S | Integration |
-| TC-AUTHZ-05 | Teacher reads unassigned student | T1 logged in | S2 id; non-existent id 999999 | GET marks | 404 for both (identical body) | P1 | S | Integration |
-| TC-AUTHZ-06 | Teacher edits assigned student/subject | T1 logged in | S1: ENG 78, MAT 91.5 | PUT | 200; DB values updated; 2 audit rows by T1 | P1 | F | Integration + E2E (TC-UI-06) |
-| TC-AUTHZ-07 | Teacher edits unassigned student | T1 logged in | S2: ENG 50 | PUT | 404; nothing saved | P1 | S | Integration |
-| TC-AUTHZ-08 | Teacher mixes assigned + unassigned subjects | T1 logged in | S1: ENG 70, SCI 60 | PUT | 403; **ENG not saved either** (atomic) | P1 | S | Integration |
-| TC-AUTHZ-09 | Client tampers protected fields | T1 logged in | body adds `student_id: S2.id`, `total: 500`, `grade: "A1"`, `role: "admin"`, `teacher_id: T2.id` | PUT for S1 | 422 `validation_error` (unknown keys); nothing saved; S2 untouched | P1 | S | Integration |
-| TC-AUTHZ-10 | Unauthenticated protected APIs | Anonymous | each protected API route/method | request | 401 JSON envelope for every route | P1 | S | Integration (parametrized) |
-| TC-AUTHZ-11 | No registration / role escalation | Anonymous | GET/POST `/register`, `/signup`; login POST with extra `role=teacher` for S1 on teacher page | requests | 404 for registration; role field ignored → 401 | P2 | S | Integration |
-| TC-AUTHZ-12 | Teacher with no assignments | T3 logged in | — | GET `/api/teacher/students` | 200 empty list | P3 | F | Integration |
+| ID | Title | Preconditions | Test data | Steps | Expected result | Pri | Type | Automation | Status (M4) |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-AUTHZ-01 | Student → teacher dashboard | S1 logged in | — | GET `/teacher/dashboard`, `/api/teacher/students` | Page 403 template; API 403 JSON | P1 | S | Integration + E2E (TC-UI-08) | **PASS** (`test_tc_authz_01_student_blocked_from_teacher_routes`) |
+| TC-AUTHZ-02 | Student attempts to edit marks | S1 logged in | valid PUT body for S1 | PUT `/api/teacher/students/<S1.id>/marks` | 403; marks unchanged; no audit row | P1 | S | Integration | **PASS** (`test_tc_authz_02_and_04_student_cannot_access_or_edit_marks_api`) |
+| TC-AUTHZ-03 | Student requests another student's result via param | S1 logged in | `?student_id=<S2.id>`, `?student_code=STU_T002` | GET `/api/student/result…` | 200 with **S1's** data only; no S2 data in body | P1 | S | Integration | Deferred to M5 (Student Results API) |
+| TC-AUTHZ-04 | Student tries teacher marks URL for other student | S1 logged in | S2 id | GET `/api/teacher/students/<S2.id>/marks` | 403 | P1 | S | Integration | **PASS** (`test_tc_authz_02_and_04_student_cannot_access_or_edit_marks_api`) |
+| TC-AUTHZ-05 | Teacher reads unassigned student | T1 logged in | S2 id; non-existent id 999999 | GET marks | 404 for both (identical body) | P1 | S | Integration | Deferred to M5 |
+| TC-AUTHZ-06 | Teacher edits assigned student/subject | T1 logged in | S1: ENG 78, MAT 91.5 | PUT | 200; DB values updated; 2 audit rows by T1 | P1 | F | Integration + E2E (TC-UI-06) | Deferred to M5 |
+| TC-AUTHZ-07 | Teacher edits unassigned student | T1 logged in | S2: ENG 50 | PUT | 404; nothing saved | P1 | S | Integration | Deferred to M5 |
+| TC-AUTHZ-08 | Teacher mixes assigned + unassigned subjects | T1 logged in | S1: ENG 70, SCI 60 | PUT | 403; **ENG not saved either** (atomic) | P1 | S | Integration | Deferred to M5 |
+| TC-AUTHZ-09 | Client tampers protected fields | T1 logged in | body adds `student_id: S2.id`, `total: 500`, `grade: "A1"`, `role: "admin"`, `teacher_id: T2.id` | PUT for S1 | 422 `validation_error` (unknown keys); nothing saved; S2 untouched | P1 | S | Integration | Deferred to M5 |
+| TC-AUTHZ-10 | Unauthenticated protected APIs | Anonymous | each protected API route/method | request | 401 JSON envelope for every route | P1 | S | Integration (parametrized) | **PASS** (`test_tc_authz_10_unauthenticated_protected_apis_return_401`) |
+| TC-AUTHZ-11 | No registration / role escalation | Anonymous | GET/POST `/register`, `/signup`; login POST with extra `role=teacher` for S1 on teacher page | requests | 404 for registration; role field ignored → 401 | P2 | S | Integration | **PASS** (`test_tc_authz_11_no_registration_route_exists`) |
+| TC-AUTHZ-12 | Teacher with no assignments | T3 logged in | — | GET `/api/teacher/students` | 200 empty list | P3 | F | Integration | Deferred to M5 |
 
 ## 4. Marks entry and validation (TC-MARK)
 
@@ -144,19 +144,19 @@ Rules from requirements §4.4.1. All maxima 100, pass 35 unless stated.
 
 ## 7. Security (TC-SEC)
 
-| ID | Title | Preconditions | Test data | Steps | Expected result | Pri | Type | Automation |
-|---|---|---|---|---|---|---|---|---|
-| TC-SEC-01 | SQL-injection-style input | PC-STD | ID `' OR '1'='1`, `STU_T001'--`, `'; DROP TABLE users;--`; same in password | POST login | 401 generic (or 400 length); no 500; `users` row count unchanged | P1 | S | Integration |
-| TC-SEC-02 | Stored XSS escaped | Student name `<script>alert(1)</script>` | — | Render dashboards (student + teacher), result modal | Literal text shown escaped; no script executes (E2E checks no alert) | P2 | S | Integration + E2E |
-| TC-SEC-03 | CSRF enforced | CSRF enabled in this test | valid session, no/invalid token | PUT marks; POST logout; POST login | 400 `csrf_failed`; no state change | P1 | S | Integration |
-| TC-SEC-04 | Security headers | — | — | GET `/`, `/student/login`, an API | CSP, nosniff, X-Frame-Options DENY, Referrer-Policy present; `Cache-Control: no-store` on authed responses | P2 | S | Integration |
-| TC-SEC-05 | Password hashing | create user | pw `S1-Passw0rd!` | inspect DB | hash starts `scrypt:`; ≠ plaintext; two users same pw → different hashes | P1 | S | Unit/Integration |
-| TC-SEC-06 | Session regenerated on login | Anonymous with pre-set session value | — | login | Old session keys cleared; new cookie value | P2 | S | Integration |
-| TC-SEC-07 | No secrets committed | Repo | — | CI `gitleaks` scan; check `.env` untracked | No findings | P1 | S | CI job |
-| TC-SEC-08 | Production config interlocks | — | `APP_ENV=production` with: DEBUG on; missing/short `SECRET_KEY` (<32 chars); mock CAPTCHA; test keys | `create_app()` | `ConfigError` for each | P1 | S | Unit |
-| TC-SEC-09 | Open redirect prevented | Anonymous | `next=https://evil.example`, `next=//evil.example` | login with next | Redirect to own dashboard | P2 | S | Integration |
-| TC-SEC-10 | Production cookie flags | production config object | — | inspect config / response `Set-Cookie` | `Secure; HttpOnly; SameSite=Lax` | P1 | S | Unit |
-| TC-SEC-11 | No stack traces leaked | Route forced to raise | — | GET | 500 generic page/JSON; no traceback text | P2 | S | Integration |
+| ID | Title | Preconditions | Test data | Steps | Expected result | Pri | Type | Automation | Status (M4) |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-SEC-01 | SQL-injection-style input | PC-STD | ID `' OR '1'='1`, `STU_T001'--`, `'; DROP TABLE users;--`; same in password | POST login | 401 generic (or 400 length); no 500; `users` row count unchanged | P1 | S | Integration | **PASS** (`test_tc_sec_01_sql_injection_safely_handled`) |
+| TC-SEC-02 | Stored XSS escaped | Student name `<script>alert(1)</script>` | — | Render dashboards (student + teacher), result modal | Literal text shown escaped; no script executes (E2E checks no alert) | P2 | S | Integration + E2E | Deferred to M6/M7 |
+| TC-SEC-03 | CSRF enforced | CSRF enabled in this test | valid session, no/invalid token | PUT marks; POST logout; POST login | 400 `csrf_failed`; no state change | P1 | S | Integration | **PASS** (`test_tc_sec_03_csrf_protection_enforced`) |
+| TC-SEC-04 | Security headers | — | — | GET `/`, `/student/login`, an API | CSP, nosniff, X-Frame-Options DENY, Referrer-Policy present; `Cache-Control: no-store` on authed responses | P2 | S | Integration | **PASS** (`test_tc_sec_04_security_headers_present`) |
+| TC-SEC-05 | Password hashing | create user | pw `S1-Passw0rd!` | inspect DB | hash starts `scrypt:`; ≠ plaintext; two users same pw → different hashes | P1 | S | Unit/Integration | **PASS** (`test_user_creation_and_password_hashing`) |
+| TC-SEC-06 | Session regenerated on login | Anonymous with pre-set session value | — | login | Old session keys cleared; new cookie value | P2 | S | Integration | **PASS** (`test_tc_sec_06_session_fixation_prevention`) |
+| TC-SEC-07 | No secrets committed | Repo | — | CI `gitleaks` scan; check `.env` untracked | No findings | P1 | S | CI job | **PASS** (verified .gitignore & repo scan) |
+| TC-SEC-08 | Production config interlocks | — | `APP_ENV=production` with: DEBUG on; missing/short `SECRET_KEY` (<32 chars); mock CAPTCHA; test keys | `create_app()` | `ConfigError` for each | P1 | S | Unit | **PASS** (`test_config.py` suite) |
+| TC-SEC-09 | Open redirect prevented | Anonymous | `next=https://evil.example`, `next=//evil.example` | login with next | Redirect to own dashboard | P2 | S | Integration | **PASS** (`test_tc_sec_09_open_redirect_prevented`, `test_is_safe_url_cases`) |
+| TC-SEC-10 | Production cookie flags | production config object | — | inspect config / response `Set-Cookie` | `Secure; HttpOnly; SameSite=Lax` | P1 | S | Unit | **PASS** (`test_tc_sec_10_cookie_security_attributes`, `test_production_config_interlocks`) |
+| TC-SEC-11 | No stack traces leaked | Route forced to raise | — | GET | 500 generic page/JSON; no traceback text | P2 | S | Integration | **PASS** (`test_tc_sec_11_no_stack_traces_leaked_on_500`) |
 
 ## 8. User interface — Selenium (TC-UI)
 

@@ -76,12 +76,30 @@ def create_app(
     @login_manager.user_loader
     def load_user(user_id: str):
         try:
+            from flask import session
             from .models import User
-            if hasattr(User, "query"):
-                return db.session.get(User, int(user_id))
+
+            user = db.session.get(User, int(user_id))
+            if not user or not user.is_active:
+                return None
+
+            # TC-AUTH-09 & TC-SEC-06: Session version verification
+            session_ver = session.get("session_version")
+            if session_ver is not None and user.session_version != session_ver:
+                return None
+
+            return user
         except Exception:
-            pass
-        return None
+            return None
+
+    @login_manager.unauthorized_handler
+    def unauthorized():
+        from flask import jsonify, redirect, request, url_for
+        if request.path.startswith("/api/") or request.is_json:
+            return jsonify({"error": {"code": "unauthenticated", "message": "Authentication required."}}), 401
+        if request.path.startswith("/teacher"):
+            return redirect(url_for("auth.teacher_login", next=request.full_path if request.method == "GET" else None))
+        return redirect(url_for("auth.student_login", next=request.full_path if request.method == "GET" else None))
 
     from . import models  # noqa: F401  (register models with SQLAlchemy metadata)
     from .views import register_blueprints

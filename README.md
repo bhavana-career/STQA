@@ -110,3 +110,43 @@ pytest -v --cov=app --cov-branch --cov-report=term-missing --cov-report=html:rep
 pytest fault_injection/tests/ -v
 ```
 *(Demonstrates deliberate before-fix defect failures for DEF-001 and DEF-002, isolated outside production logic).*
+
+---
+
+## Authentication & Security Architecture
+
+### 1. Authentication Flows
+- **Student Sign In (`/student/login`)**: Requires Student Login ID (`STU2026001`), password, and Cloudflare Turnstile CAPTCHA.
+- **Teacher Sign In (`/teacher/login`)**: Requires Teacher Login ID (`TCH001`), password, and Cloudflare Turnstile CAPTCHA.
+- **Role Isolation**: Submitting student credentials on the teacher portal (or vice versa) results in a non-revealing `401 Invalid ID or password.` and increments the failed attempt counter on that account.
+- **Non-Revealing Errors**: Non-existent usernames and incorrect passwords return the identical message (`Invalid ID or password.`) with HTTP 401 to prevent user enumeration.
+
+### 2. Session Security & Fixation Protection
+- **Session Fixation Prevention**: `session.clear()` is called immediately before `login_user()`, regenerating the session and wiping pre-login cookies.
+- **Global Session Revocation**: Every user has a database-backed `session_version` integer. Calling `/logout` increments `session_version` in the database, immediately invalidating all active sessions across all devices and browsers.
+- **Idle Expiry**: Sessions are configured with `PERMANENT_SESSION_LIFETIME` (default: 30 minutes) and `SESSION_REFRESH_EACH_REQUEST = True`. Inactive sessions automatically expire.
+- **Cookie Flags**:
+  - `HttpOnly`: Always enabled (blocks JavaScript access).
+  - `SameSite`: Set to `Lax` (protects against CSRF).
+  - `Secure`: Enforced in production (`APP_ENV=production`).
+
+### 3. Brute-Force Protection & Account Lockout
+- Accounts track `failed_login_count` and `locked_until`.
+- After 5 consecutive failed attempts (`LOGIN_MAX_ATTEMPTS`), the account is automatically locked for 15 minutes (`LOGIN_LOCKOUT_MINUTES`), returning HTTP `429 Too Many Requests`.
+- Administrators can immediately unlock accounts via `flask unlock-user <LOGIN_ID>`.
+
+### 4. Cloudflare Turnstile Setup & Modes
+The application supports three CAPTCHA operating modes:
+- **`CAPTCHA_MODE=mock`**: Used during local unit and integration tests. Evaluates tokens offline without external network dependencies. Strictly blocked outside `APP_ENV=testing`.
+- **`CAPTCHA_MODE=turnstile` with Test Keys**: Documented Cloudflare test keys for development/staging:
+  - Site Key: `1x00000000000000000000AA` (Always passes)
+  - Secret Key: `1x0000000000000000000000000000000AA` (Always passes)
+- **`CAPTCHA_MODE=turnstile` in Production**:
+  - Cloudflare Dashboard -> Turnstile -> Add Site.
+  - Set Domain to your Render domain (e.g., `srms-stqa.onrender.com`).
+  - Widget Mode: *Managed*.
+  - Copy Site Key into Render environment variable `TURNSTILE_SITE_KEY`.
+  - Copy Secret Key into Render environment variable `TURNSTILE_SECRET_KEY`.
+  - Set `TURNSTILE_ALLOWED_HOSTNAMES=srms-stqa.onrender.com`.
+  > [!IMPORTANT]
+  > Production interlocks strictly reject dummy tokens and test keys (`1x...`, `2x...`, `3x...`) during `create_app()`, preventing accidental test-mode deployments.

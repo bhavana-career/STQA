@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Student Dashboard — SRMS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-container">
+            <h1 class="portal-title">Student Portal</h1>
+            <div class="header-user-info" style="display: flex; align-items: center; gap: 1rem;">
+                <span>Logged in as: <strong>{{ current_user.login_id }}</strong></span>
+                <form method="POST" action="{{ url_for('auth.logout') }}" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-outline" id="btn-logout" style="padding: 0.35rem 0.75rem;">Logout</button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <main class="container main-content" style="padding: 2rem 0;">
+        <div class="card" style="padding: 1.5rem; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <h2>Student Dashboard</h2>
+            <p>Welcome to the 10th Standard Academic Result Portal.</p>
+            <p>Student Account: <code>{{ current_user.login_id }}</code></p>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 SRMS Academic Lab Project. Fictional sample data only.</p>
+        </div>
+    </footer>
+</body>
+</html>

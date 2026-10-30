@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{{ title }} — SRMS Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% if config.get('CAPTCHA_MODE') == 'turnstile' %}
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    {% endif %}
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-container">
+            <h1 class="portal-title"><a href="{{ url_for('main.index') }}" style="color: inherit; text-decoration: none;">10th Standard Result Portal</a></h1>
+            <span class="badge demo-badge">Demonstration System — Academic Use Only</span>
+        </div>
+    </header>
+
+    <main class="container main-content">
+        <div class="auth-card-container">
+            <div class="card auth-card">
+                <h2 class="auth-card-title">{{ title }}</h2>
+                <p class="auth-card-subtitle">
+                    {% if role == 'student' %}
+                    Enter your Student ID (e.g., STU2026001) and password.
+                    {% else %}
+                    Enter your Teacher ID (e.g., TCH001) and password.
+                    {% endif %}
+                </p>
+
+                {% if error_message %}
+                <div class="alert alert-danger" role="alert" id="auth-error-alert" aria-live="polite">
+                    {{ error_message }}
+                </div>
+                {% endif %}
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="alert alert-{{ category }}" role="status">{{ message }}</div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="" class="auth-form" novalidate id="login-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    {% if next %}
+                    <input type="hidden" name="next" value="{{ next }}"/>
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label for="login_id">Login ID</label>
+                        <input type="text"
+                               name="login_id"
+                               id="login_id"
+                               class="form-control"
+                               required
+                               maxlength="32"
+                               autocomplete="username"
+                               value="{{ login_id or '' }}"
+                               placeholder="{% if role == 'student' %}STU2026001{% else %}TCH001{% endif %}"
+                               aria-describedby="login_id_help"/>
+                        <small id="login_id_help" class="form-text">Case-insensitive identification code.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password"
+                               name="password"
+                               id="password"
+                               class="form-control"
+                               required
+                               maxlength="128"
+                               autocomplete="current-password"
+                               placeholder="••••••••••••"/>
+                    </div>
+
+                    <div class="form-group captcha-group">
+                        <label>Security Verification</label>
+                        {% if config.get('CAPTCHA_MODE') == 'turnstile' %}
+                        <div class="cf-turnstile"
+                             data-sitekey="{{ site_key }}"
+                             data-action="{{ action }}"
+                             data-theme="light"></div>
+                        {% else %}
+                        <!-- Mock CAPTCHA for unit & automated test suites -->
+                        <div class="mock-captcha-box" style="padding: 10px; border: 1px dashed #ccc; border-radius: 4px; background: #fdfdfd;">
+                            <span style="font-size: 0.85rem; color: #555;">[CAPTCHA Verification Simulation]</span>
+                            <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-response" value="XXXX.DUMMY.TOKEN.XXXX"/>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-actions" style="margin-top: 1.5rem;">
+                        <button type="submit" class="btn btn-primary btn-block" id="btn-submit-login">Sign In</button>
+                    </div>
+                </form>
+
+                <div class="auth-card-footer" style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem;">
+                    {% if role == 'student' %}
+                    <a href="{{ url_for('auth.teacher_login') }}">Teacher Portal Sign In &rarr;</a>
+                    {% else %}
+                    <a href="{{ url_for('auth.student_login') }}">Student Portal Sign In &rarr;</a>
+                    {% endif %}
+                    <span style="margin: 0 0.5rem; color: #999;">|</span>
+                    <a href="{{ url_for('main.index') }}">Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 SRMS Academic Lab Project. Fictional sample data only.</p>
+        </div>
+    </footer>
+</body>
+</html>

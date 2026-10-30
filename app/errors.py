@@ -35,7 +35,11 @@ _MESSAGES = {
 
 
 def wants_json() -> bool:
-    return request.path.startswith("/api/")
+    return (
+        request.path.startswith("/api/")
+        or request.is_json
+        or request.accept_mimetypes.best == "application/json"
+    )
 
 
 def error_response(status: int, code: str | None = None, message: str | None = None, details=None):

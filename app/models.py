@@ -5,7 +5,7 @@ and database-level integrity constraints as defined in docs/database-schema.md.
 """
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any
 
@@ -61,6 +61,8 @@ class User(UserMixin, db.Model):
     teacher: Mapped[Teacher | None] = relationship("Teacher", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     def __init__(self, login_id: str, role: str, is_active: bool = True, **kwargs: Any) -> None:
+        kwargs.setdefault("failed_login_count", 0)
+        kwargs.setdefault("session_version", 1)
         super().__init__(login_id=login_id.strip().upper(), role=role.lower(), is_active=is_active, **kwargs)
 
     def set_password(self, password: str) -> None:
@@ -77,6 +79,32 @@ class User(UserMixin, db.Model):
 
     def get_id(self) -> str:
         return str(self.id)
+
+    def is_locked(self, now: datetime | None = None) -> bool:
+        """Check whether the account is currently locked."""
+        if not self.locked_until:
+            return False
+        current_time = now or utc_now()
+        return self.locked_until > current_time
+
+    def record_failed_login(self, max_attempts: int = 5, lockout_minutes: int = 15) -> bool:
+        """Increment failed attempts and lock account if max_attempts reached."""
+        self.failed_login_count = (self.failed_login_count or 0) + 1
+        if self.failed_login_count >= max_attempts:
+            self.locked_until = utc_now() + timedelta(minutes=lockout_minutes)
+            return True
+        return False
+
+    def record_successful_login(self) -> None:
+        """Reset failed login count and lockout status upon successful authentication."""
+        self.failed_login_count = 0
+        self.locked_until = None
+        self.last_login_at = utc_now()
+
+    def increment_session_version(self) -> int:
+        """Increment session version to invalidate existing sessions across all devices."""
+        self.session_version = (self.session_version or 1) + 1
+        return self.session_version
 
     def to_dict(self) -> dict[str, Any]:
         """Safe serialization that strictly omits password_hash."""
