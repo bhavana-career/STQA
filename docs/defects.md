@@ -11,6 +11,7 @@ In accordance with STQA laboratory practices, intentional defects are implemente
 |---|---|---|---|---|---|---|
 | **DEF-001** | Incorrect percentage denominator assumption (`count * 100` instead of `sum(max_marks)`) | High | P1 | **Closed** (Verified) | `fault_injection/tests/test_failing_faults.py::test_def_001_failing_on_faulty_percentage` | `tests/unit/test_grading.py::TestPercentageCalculation::test_non_uniform_maxima_percentage` |
 | **DEF-002** | Grade boundary off-by-one (`>` instead of `>=` on inclusive lower bounds) | High | P1 | **Closed** (Verified) | `fault_injection/tests/test_failing_faults.py::test_def_002_failing_on_faulty_grade_boundary` | `tests/unit/test_grading.py::TestGradeForPercentage::test_grade_boundaries` |
+| **DEF-006** | Division-by-zero lack of divisor guarding causing unhandled runtime crash | Critical | P1 | **Closed** (Verified) | `fault_injection/tests/test_failing_faults.py::test_def_006_failing_on_division_by_zero` | `academic/tests/test_academic_exercises.py::TestExercise1Division` / `tests/unit/test_fault_demo.py::TestDefect006DivisionByZero` |
 
 ---
 
@@ -61,3 +62,25 @@ In accordance with STQA laboratory practices, intentional defects are implemente
 - **Resolution / Fix:** In `app/services/grading.py::grade_for_percentage`, iterate grade thresholds using `if pct_dec >= lower_bound: return grade_name`.
 - **Retest Evidence:** `pytest tests/unit/test_fault_demo.py -k test_def_002_corrected_implementation_passes` -> PASSED (recorded in `docs/evidence/faults/DEF-002-after.txt`).
 - **Regression Tests:** `tests/unit/test_grading.py::TestGradeForPercentage::test_grade_boundaries` (covers all lower and upper bounds for A1, A2, B1, B2, C1, C2, D, E) (TC-CALC-12).
+
+---
+
+### Record: DEF-006
+
+- **Defect ID:** DEF-006
+- **Title:** Division program crashes with unhandled `ZeroDivisionError` when divisor is zero, lacking defensive parameter validation.
+- **Severity:** Critical
+- **Priority:** P1
+- **Status Lifecycle:** New -> Assigned -> Open -> Fixed -> Retest -> Verified -> Closed
+- **Component:** `academic/division/faulty.py::divide_faulty` (demonstrated vs `academic/division/corrected.py::divide`)
+- **Steps to Reproduce:**
+  1. Invoke division operation with dividend = 10, divisor = 0.
+  2. Execute `fault_injection/tests/test_failing_faults.py::test_def_006_failing_on_division_by_zero`.
+- **Expected Result:** Application catches zero divisor defensively, raises domain-specific `ValueError("Cannot divide by zero")` or returns structured validation error without unhandled process termination.
+- **Actual Result (Before Fix):** Faulty function executes raw `a / b`, raising an unhandled Python `ZeroDivisionError: division by zero` causing crash.
+- **Failure Evidence:** Recorded in `docs/evidence/faults/DEF-006-before.txt`.
+- **Root Cause:** Absence of input boundary checking for denominator equal to zero.
+- **Resolution / Fix:** In `academic/division/corrected.py::divide`, validate that both inputs are numeric (integers or floats, excluding boolean subclass) and check `if b == 0: raise ValueError("Cannot divide by zero")`.
+- **Retest Evidence:** `pytest tests/unit/test_fault_demo.py -k test_def_006 -v` -> 2 PASSED (recorded in `docs/evidence/faults/DEF-006-after.txt`).
+- **Regression Tests:** `academic/tests/test_academic_exercises.py::TestExercise1Division` (11 test cases covering normal division, negative operands, decimals, zero dividend, zero divisor rejection, and type verification).
+

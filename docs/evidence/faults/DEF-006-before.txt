@@ -1,0 +1,34 @@
+=== DEF-006 BEFORE FIX EXECUTION EVIDENCE ===
+Command: pytest fault_injection/tests/test_failing_faults.py -k test_def_006
+Timestamp: 2026-10-30T16:20:41+05:30
+Result: FAILED
+
+__________________ test_def_006_failing_on_division_by_zero ___________________
+
+    @pytest.mark.fault_demo
+    def test_def_006_failing_on_division_by_zero():
+        """DEF-006 Before-Fix Test: Expects domain-specific ValueError on division by zero.
+    
+        FAILS on divide_faulty because it lacks zero guarding and raises raw ZeroDivisionError.
+        """
+        from academic.division.faulty import divide_faulty
+    
+        with pytest.raises(ValueError, match="Cannot divide by zero"):
+>           divide_faulty(10, 0)
+
+fault_injection\tests\test_failing_faults.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = 10, b = 0
+
+    def divide_faulty(a: float, b: float) -> float:
+        """Faulty division without zero guarding or proper input type handling."""
+        # Defect: Directly divides without checking if b == 0, causing unhandled crash
+>       return a / b
+               ^^^^^
+E       ZeroDivisionError: division by zero
+
+academic\division\faulty.py:13: ZeroDivisionError
+=========================== short test summary info ===========================
+FAILED fault_injection/tests/test_failing_faults.py::test_def_006_failing_on_division_by_zero
+======================= 1 failed, 2 deselected in 0.10s =======================

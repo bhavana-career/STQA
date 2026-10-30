@@ -46,3 +46,16 @@ def test_def_002_failing_on_faulty_grade_boundary():
     assert actual == expected_grade, (
         f"DEF-002 Failure: Expected grade {expected_grade} for {pct}%, got {actual}"
     )
+
+
+@pytest.mark.fault_demo
+def test_def_006_failing_on_division_by_zero():
+    """DEF-006 Before-Fix Test: Expects domain-specific ValueError on division by zero.
+
+    FAILS on divide_faulty because it lacks zero guarding and raises raw ZeroDivisionError.
+    """
+    from academic.division.faulty import divide_faulty
+
+    with pytest.raises(ValueError, match="Cannot divide by zero"):
+        divide_faulty(10, 0)
+

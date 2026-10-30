@@ -125,16 +125,26 @@ pytest tests/e2e/test_boundaries_and_security.py -v # Boundary values, input val
 ```
 *Note: Requires Google Chrome or Chromium installed. Selenium Manager automatically provisions the matching chromedriver. In case of any assertion or timeout failure, automated screenshot artifacts (`reports/screenshots/<test_name>.png`) and browser console logs (`reports/screenshots/<test_name>_browser.log`) are captured automatically.*
 
-### 4. Full Automated Test Suite with Statement & Branch Coverage
+### 4. Academic STQA Laboratory Exercises (Exercises 1–10)
+Run the academic test suite covering Division, Age Validation (EP/BVA), ATM Black-Box, Coverage demonstrations, Top-Down Integration with Stubs, and Software Engineering Metrics:
 ```powershell
-pytest -v --cov=app --cov-branch --cov-report=term-missing --cov-report=html:reports/coverage --html=reports/m7_report.html --self-contained-html
+pytest academic/tests/ -v
+```
+*(All 10 academic exercises are documented in detail under [`docs/academic/`](file:///c:/Users/bhava/Downloads/ST&QA/docs/academic/README.md)).*
+
+### 5. Full Automated Test Suite with Statement & Branch Coverage
+Run the unified 289-test suite (Unit, Integration, Academic, and Headless Chrome E2E):
+```powershell
+pytest -v --cov=app --cov-branch --cov-report=term-missing --cov-report=html:reports/coverage --html=reports/m8_report.html --self-contained-html
 ```
 
-### 5. Controlled Fault-Injection Defect Demonstrations
+### 6. Controlled Fault-Injection Defect Demonstrations
 ```powershell
 pytest fault_injection/tests/ -v
 ```
-*(Demonstrates deliberate before-fix defect failures for DEF-001 and DEF-002, isolated outside production logic).*
+*(Demonstrates deliberate before-fix defect failures for DEF-001, DEF-002, and DEF-006, isolated outside production logic).*
+- Before/after defect logs: `docs/evidence/faults/`
+- Defect tracking and lifecycle: `docs/defects.md`
 
 ---
 

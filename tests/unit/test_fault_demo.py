@@ -76,3 +76,24 @@ class TestDefect002GradeBoundaryComparison:
         """
         assert grade_for_percentage(Decimal("90.00")) == "A1"
         assert grade_for_percentage(Decimal("35.00")) == "D"
+
+
+@pytest.mark.fault_demo
+class TestDefect006DivisionByZero:
+    """DEF-006: Division by zero unhandled crash."""
+
+    def test_def_006_faulty_crashes_with_zero_division_error(self):
+        """Demonstrates DEF-006: divide_faulty(10, 0) raises raw ZeroDivisionError without domain handling."""
+        from academic.division.faulty import divide_faulty
+
+        with pytest.raises(ZeroDivisionError):
+            divide_faulty(10, 0)
+
+    def test_def_006_corrected_implementation_passes(self):
+        """Regression test for DEF-006: safe_divide properly guards zero and raises domain ValueError."""
+        from academic.division.corrected import safe_divide
+
+        with pytest.raises(ValueError, match="Cannot divide by zero"):
+            safe_divide(10, 0)
+        # Valid division passes cleanly
+        assert safe_divide(10, 2) == Decimal("5.0000")
