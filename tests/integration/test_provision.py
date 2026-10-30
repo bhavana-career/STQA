@@ -121,7 +121,7 @@ class TestOneTimeProvisioningWorkflow:
             },
         )
         assert res.status_code == 400
-        assert b"Teacher password policy error" in res.data
+        assert b"Teacher password does not meet complexity requirements" in res.data
 
         # Weak student password (no special character)
         res2 = pg_client.post(
@@ -135,7 +135,7 @@ class TestOneTimeProvisioningWorkflow:
             },
         )
         assert res2.status_code == 400
-        assert b"Student password policy error" in res2.data
+        assert b"Student password does not meet complexity requirements" in res2.data
 
     def test_successful_atomic_provisioning_and_subsequent_lockout(self, pg_client, pg_app, monkeypatch):
         """Successful submission provisions accounts, assigns Mathematics, and permanently self-locks."""
@@ -225,13 +225,128 @@ class TestOneTimeProvisioningWorkflow:
             },
         )
         assert res.status_code == 409
-        assert b"already exists with an active password" in res.data
+        assert b"One or more accounts already exist" in res.data
 
         # Ensure existing password was NOT modified
         with pg_app.app_context():
             teacher = db.session.scalar(select(User).where(User.login_id == "TCH001"))
             assert teacher.check_password("ExistingTeacherPass123!") is True
             assert teacher.check_password("NewTeacherP@ssw0rd1!") is False
+
+    def test_simultaneous_first_time_requests(self, pg_app, monkeypatch):
+        """Simultaneous first-time requests across workers are safely serialized; only one executes."""
+        monkeypatch.setenv("PROVISIONING_SECRET", TEST_SECRET)
+
+        t_pass = "TeachStrongP@ssw0rd1!"
+        s_pass = "StudStrongP@ssw0rd2!"
+        payload = {
+            "provisioning_secret": TEST_SECRET,
+            "teacher_password": t_pass,
+            "confirm_teacher_password": t_pass,
+            "student_password": s_pass,
+            "confirm_student_password": s_pass,
+        }
+
+        results = []
+
+        def make_request():
+            with pg_app.test_client() as client:
+                res = client.post("/system/provision", data=payload)
+                results.append(res.status_code)
+
+        import threading
+        t1 = threading.Thread(target=make_request)
+        t2 = threading.Thread(target=make_request)
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+
+        # One request must succeed (200), the other must be rejected (409 lock contention or 404 lockout)
+        assert 200 in results
+        assert all(code in (200, 404, 409) for code in results)
+        assert results.count(200) == 1
+
+        # Database state: exactly 1 teacher and 5 students
+        with pg_app.app_context():
+            teacher_count = db.session.scalar(select(db.func.count(Teacher.id)))
+            student_count = db.session.scalar(select(db.func.count(Student.id)))
+            assert teacher_count == 1
+            assert student_count == 5
+            setting = db.session.scalar(select(SystemSetting).where(SystemSetting.key == "bootstrap_completed"))
+            assert setting is not None
+            assert setting.value == "true"
+
+    def test_missing_passwords_rejected_and_nothing_seeded(self, pg_client, pg_app, monkeypatch):
+        """Rejects empty teacher or student passwords and ensures no records are seeded."""
+        monkeypatch.setenv("PROVISIONING_SECRET", TEST_SECRET)
+
+        # Empty teacher password
+        res = pg_client.post(
+            "/system/provision",
+            data={
+                "provisioning_secret": TEST_SECRET,
+                "teacher_password": "",
+                "confirm_teacher_password": "",
+                "student_password": "ValidStr0ngP@ss2",
+                "confirm_student_password": "ValidStr0ngP@ss2",
+            },
+        )
+        assert res.status_code == 400
+        assert b"All password fields are required" in res.data
+
+        # Empty student password
+        res2 = pg_client.post(
+            "/system/provision",
+            data={
+                "provisioning_secret": TEST_SECRET,
+                "teacher_password": "ValidStr0ngP@ss1",
+                "confirm_teacher_password": "ValidStr0ngP@ss1",
+                "student_password": "",
+                "confirm_student_password": "",
+            },
+        )
+        assert res2.status_code == 400
+        assert b"All password fields are required" in res2.data
+
+        with pg_app.app_context():
+            assert db.session.scalar(select(db.func.count(User.id))) == 0
+
+    def test_rollback_behavior_on_failure(self, pg_client, pg_app, monkeypatch):
+        """If an unexpected exception occurs during provisioning, all changes are rolled back."""
+        monkeypatch.setenv("PROVISIONING_SECRET", TEST_SECRET)
+
+        from app.views import provision as prov_module
+
+        def failing_provision(*args, **kwargs):
+            u = User(login_id="TCH001", role="teacher")
+            u.set_password("ValidP@ssw0rd123!")
+            db.session.add(u)
+            db.session.flush()
+            raise RuntimeError("Database connection lost during provisioning")
+
+        monkeypatch.setattr(prov_module, "provision_stqa_scenario", failing_provision)
+
+        res = pg_client.post(
+            "/system/provision",
+            data={
+                "provisioning_secret": TEST_SECRET,
+                "teacher_password": "ValidStr0ngP@ss1",
+                "confirm_teacher_password": "ValidStr0ngP@ss1",
+                "student_password": "ValidStr0ngP@ss2",
+                "confirm_student_password": "ValidStr0ngP@ss2",
+            },
+        )
+        assert res.status_code == 500
+        assert b"An error occurred while processing the provisioning request" in res.data
+        # Ensure raw internal exception is never exposed to user
+        assert b"Database connection lost" not in res.data
+        assert b"RuntimeError" not in res.data
+
+        # Verify nothing was committed
+        with pg_app.app_context():
+            assert db.session.scalar(select(db.func.count(User.id))) == 0
+            assert db.session.scalar(select(SystemSetting).where(SystemSetting.key == "bootstrap_completed")) is None
 
     def test_rate_limiting_on_repeated_failed_attempts(self, pg_client, monkeypatch):
         """Blocks IP after 5 failed attempts with HTTP 429."""

@@ -44,8 +44,6 @@ from ..models import (
 )
 from .password_policy import validate_password_strength
 
-DEFAULT_DEMO_PASSWORD = "Stqa@Demo2026!"
-
 DEMO_TEACHER = {
     "login_id": "TCH001",
     "full_name": "General Teacher",
@@ -134,21 +132,26 @@ class AccountAlreadyExistsError(Exception):
 
 
 def provision_stqa_scenario(
-    teacher_password: str | None = None,
-    student_password: str | None = None,
+    teacher_password: str,
+    student_password: str,
     overwrite_passwords: bool = False,
     lockout_system: bool = True,
 ) -> dict[str, Any]:
     """Execute reproducible provisioning for STQA demo testing scenario atomically.
 
-    :param teacher_password: Password for TCH001 (defaults to DEFAULT_DEMO_PASSWORD).
-    :param student_password: Password for all 5 students (defaults to DEFAULT_DEMO_PASSWORD).
+    :param teacher_password: Explicit password for TCH001 (min 12 chars).
+    :param student_password: Explicit password for all 5 students (min 12 chars).
     :param overwrite_passwords: If False, raises AccountAlreadyExistsError on active accounts.
     :param lockout_system: If True, writes SystemSetting("bootstrap_completed") = "true".
     :return: Summary dictionary of provisioned entities and credentials status.
     """
-    t_pass = teacher_password or DEFAULT_DEMO_PASSWORD
-    s_pass = student_password or DEFAULT_DEMO_PASSWORD
+    if not teacher_password or not str(teacher_password).strip():
+        raise ValueError("Teacher password must be explicitly provided.")
+    if not student_password or not str(student_password).strip():
+        raise ValueError("Student password must be explicitly provided.")
+
+    t_pass = str(teacher_password).strip()
+    s_pass = str(student_password).strip()
 
     # Validate password complexity
     valid_t, err_t = validate_password_strength(t_pass, min_length=12)
@@ -159,6 +162,26 @@ def provision_stqa_scenario(
     if not valid_s:
         raise ValueError(f"Student password does not meet policy: {err_s}")
 
+    try:
+        summary = _execute_seeding(
+            t_pass=t_pass,
+            s_pass=s_pass,
+            overwrite_passwords=overwrite_passwords,
+            lockout_system=lockout_system,
+        )
+        db.session.commit()
+        return summary
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+def _execute_seeding(
+    t_pass: str,
+    s_pass: str,
+    overwrite_passwords: bool,
+    lockout_system: bool,
+) -> dict[str, Any]:
     now = datetime.now(timezone.utc)
 
     # 1. Check existing accounts for silent overwrite protection
@@ -364,7 +387,7 @@ def provision_stqa_scenario(
             setting = SystemSetting(key="bootstrap_completed", value="true")
             db.session.add(setting)
 
-    db.session.commit()
+    db.session.flush()
 
     return {
         "teacher": {

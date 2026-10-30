@@ -19,7 +19,6 @@ from sqlalchemy import select
 from app.extensions import db
 from app.models import Mark, MarkAudit, Student, TeacherAssignment, User
 from app.services.seed_data import (
-    DEFAULT_DEMO_PASSWORD,
     DEMO_STUDENTS,
     DEMO_SUBJECTS,
     DEMO_TEACHER,
@@ -27,14 +26,16 @@ from app.services.seed_data import (
     provision_stqa_scenario,
 )
 
+TEST_DEMO_PASSWORD = "Stqa@Demo2026!"
+
 
 @pytest.fixture
 def stqa_seeded_env(pg_app):
     """Seed the STQA testing scenario in PostgreSQL."""
     with pg_app.app_context():
         summary = provision_stqa_scenario(
-            teacher_password=DEFAULT_DEMO_PASSWORD,
-            student_password=DEFAULT_DEMO_PASSWORD,
+            teacher_password=TEST_DEMO_PASSWORD,
+            student_password=TEST_DEMO_PASSWORD,
             overwrite_passwords=False,
             lockout_system=False,
         )
@@ -53,7 +54,7 @@ class TestStqaScenarioSeedAndInsights:
             assert t_user is not None
             assert t_user.role == "teacher"
             assert t_user.teacher.full_name == "General Teacher"
-            assert t_user.check_password(DEFAULT_DEMO_PASSWORD) is True
+            assert t_user.check_password(TEST_DEMO_PASSWORD) is True
 
             # 2. 5 Student accounts with unique USNs
             all_usns = [s["login_id"] for s in DEMO_STUDENTS]
@@ -62,7 +63,7 @@ class TestStqaScenarioSeedAndInsights:
                 s_user = db.session.scalar(select(User).where(User.login_id == usn))
                 assert s_user is not None
                 assert s_user.role == "student"
-                assert s_user.check_password(DEFAULT_DEMO_PASSWORD) is True
+                assert s_user.check_password(TEST_DEMO_PASSWORD) is True
                 assert s_user.student.section.class_name == "10th Standard"
                 assert s_user.student.section.name == "A"
 
@@ -87,7 +88,7 @@ class TestStqaScenarioSeedAndInsights:
             "/teacher/login",
             data={
                 "login_id": "TCH001",
-                "password": DEFAULT_DEMO_PASSWORD,
+                "password": TEST_DEMO_PASSWORD,
                 "cf-turnstile-response": "mock_valid_token",
             },
             follow_redirects=True,
@@ -160,7 +161,7 @@ class TestStqaScenarioSeedAndInsights:
             "/teacher/login",
             data={
                 "login_id": "TCH001",
-                "password": DEFAULT_DEMO_PASSWORD,
+                "password": TEST_DEMO_PASSWORD,
                 "cf-turnstile-response": "mock_valid_token",
             },
             follow_redirects=True,
@@ -213,7 +214,7 @@ class TestStqaScenarioSeedAndInsights:
                 "/student/login",
                 data={
                     "login_id": usn,
-                    "password": DEFAULT_DEMO_PASSWORD,
+                    "password": TEST_DEMO_PASSWORD,
                     "cf-turnstile-response": "mock_valid_token",
                 },
                 follow_redirects=True,
@@ -244,11 +245,61 @@ class TestStqaScenarioSeedAndInsights:
         """Calling provision_stqa_scenario with overwrite_passwords=False aborts if accounts exist."""
         with pg_app.app_context():
             with pytest.raises(AccountAlreadyExistsError):
-                provision_stqa_scenario(overwrite_passwords=False)
+                provision_stqa_scenario(
+                    teacher_password=TEST_DEMO_PASSWORD,
+                    student_password=TEST_DEMO_PASSWORD,
+                    overwrite_passwords=False,
+                )
+
+    def test_missing_passwords_raises_value_error(self, pg_app):
+        """Omitting teacher or student password raises ValueError; never falls back to default."""
+        with pg_app.app_context():
+            with pytest.raises(ValueError, match="Teacher password must be explicitly provided"):
+                provision_stqa_scenario(teacher_password="", student_password=TEST_DEMO_PASSWORD)
+
+            with pytest.raises(ValueError, match="Student password must be explicitly provided"):
+                provision_stqa_scenario(teacher_password=TEST_DEMO_PASSWORD, student_password="   ")
+
+    def test_provision_stqa_scenario_rolls_back_on_failure(self, pg_app, monkeypatch):
+        """If an error occurs mid-seeding, all changes are rolled back completely."""
+        with pg_app.app_context():
+            initial_users = db.session.scalar(select(db.func.count(User.id)))
+
+            # Monkeypatch db.session.flush to simulate a database failure during student seeding
+            original_flush = db.session.flush
+            flush_count = 0
+
+            def failing_flush(*args, **kwargs):
+                nonlocal flush_count
+                flush_count += 1
+                if flush_count >= 5:  # Let section and teacher flush, fail on student
+                    raise RuntimeError("Simulated database failure during seeding")
+                return original_flush(*args, **kwargs)
+
+            monkeypatch.setattr(db.session, "flush", failing_flush)
+
+            with pytest.raises(RuntimeError, match="Simulated database failure"):
+                provision_stqa_scenario(
+                    teacher_password=TEST_DEMO_PASSWORD,
+                    student_password=TEST_DEMO_PASSWORD,
+                    overwrite_passwords=False,
+                )
+
+            # Assert complete rollback: no new users were committed
+            final_users = db.session.scalar(select(db.func.count(User.id)))
+            assert final_users == initial_users
 
     def test_cli_seed_stqa_command(self, pg_runner, pg_app):
-        """CLI seed-stqa command executes idempotently and outputs summary."""
-        result = pg_runner.invoke(args=["seed-stqa"])
+        """CLI seed-stqa command executes with explicit password arguments and outputs summary."""
+        result = pg_runner.invoke(
+            args=[
+                "seed-stqa",
+                "--teacher-password",
+                TEST_DEMO_PASSWORD,
+                "--student-password",
+                TEST_DEMO_PASSWORD,
+            ]
+        )
         assert result.exit_code == 0
         assert "STQA scenario seeded successfully" in result.output
         assert "TCH001 (General Teacher)" in result.output

@@ -441,10 +441,22 @@ def register_cli(app: Flask) -> None:
     @click.option("--overwrite", is_flag=True, help="Force overwrite passwords if accounts already exist")
     def seed_stqa_cmd(teacher_password: str | None, student_password: str | None, overwrite: bool) -> None:
         """Seed official STQA testing scenario (1 general teacher, 5 students, 5 subjects, realistic marks)."""
+        import getpass
         from .services.seed_data import provision_stqa_scenario
+
+        t_pass = teacher_password
+        s_pass = student_password
+        if not t_pass:
+            t_pass = getpass.getpass("Enter password for Teacher (TCH001): ")
+        if not s_pass:
+            s_pass = getpass.getpass("Enter password for Students: ")
+
+        if not t_pass or not s_pass:
+            raise click.ClickException("Both teacher and student passwords must be explicitly provided.")
+
         summary = provision_stqa_scenario(
-            teacher_password=teacher_password,
-            student_password=student_password,
+            teacher_password=t_pass,
+            student_password=s_pass,
             overwrite_passwords=overwrite,
             lockout_system=False,
         )

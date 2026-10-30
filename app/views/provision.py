@@ -27,7 +27,7 @@ from flask import (
     render_template,
     request,
 )
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
 from ..extensions import db
@@ -47,6 +47,9 @@ from ..services.password_policy import validate_password_strength
 from ..services.seed_data import AccountAlreadyExistsError, provision_stqa_scenario
 
 bp = Blueprint("provision", __name__, url_prefix="/system")
+
+# Unique 64-bit integer constant for PostgreSQL advisory transaction lock ("SRMSPROV")
+PROVISIONING_ADVISORY_LOCK_ID = 6004000305882656630
 
 # In-memory IP rate limiter for provisioning failures
 _FAILED_ATTEMPTS: dict[str, list[datetime]] = {}
@@ -174,23 +177,23 @@ def process_provision() -> Response:
         return _set_security_headers(resp)
 
     # Validate strong password policy
-    valid_t, err_t = validate_password_strength(teacher_password, min_length=12)
+    valid_t, _ = validate_password_strength(teacher_password, min_length=12)
     if not valid_t:
         resp = make_response(
             render_template(
                 "provision/setup.html",
-                error=f"Teacher password policy error: {err_t}",
+                error="Teacher password does not meet complexity requirements (minimum 12 characters with uppercase, lowercase, numbers, and special characters).",
             ),
             400,
         )
         return _set_security_headers(resp)
 
-    valid_s, err_s = validate_password_strength(student_password, min_length=12)
+    valid_s, _ = validate_password_strength(student_password, min_length=12)
     if not valid_s:
         resp = make_response(
             render_template(
                 "provision/setup.html",
-                error=f"Student password policy error: {err_s}",
+                error="Student password does not meet complexity requirements (minimum 12 characters with uppercase, lowercase, numbers, and special characters).",
             ),
             400,
         )
@@ -198,15 +201,34 @@ def process_provision() -> Response:
 
     # Atomic execution with safety check against silent overwrite
     try:
-        # 1. Concurrency guard: Lock or check bootstrap_completed row
-        setting = db.session.scalar(
-            select(SystemSetting).where(SystemSetting.key == "bootstrap_completed").with_for_update()
-        )
-        if setting and setting.value.lower() == "true":
+        # 1. PostgreSQL advisory transaction lock across workers for initial request
+        is_postgres = False
+        try:
+            is_postgres = db.session.bind.dialect.name == "postgresql"
+        except Exception:
+            pass
+
+        if is_postgres:
+            acquired = db.session.scalar(
+                select(func.pg_try_advisory_xact_lock(PROVISIONING_ADVISORY_LOCK_ID))
+            )
+            if not acquired:
+                db.session.rollback()
+                resp = make_response(
+                    render_template(
+                        "provision/setup.html",
+                        error="Provisioning is currently in progress. Please try again shortly.",
+                    ),
+                    409,
+                )
+                return _set_security_headers(resp)
+
+        # 2. Check if bootstrap has already completed
+        if _is_bootstrap_already_completed():
             db.session.rollback()
             abort(404)
 
-        # 2. Provision STQA Testing Scenario (General Teacher TCH001, 5 Students, 5 Subjects, 25 Assignments, Realistic Marks)
+        # 3. Provision STQA Testing Scenario (General Teacher TCH001, 5 Students, 5 Subjects, 25 Assignments, Realistic Marks)
         summary = provision_stqa_scenario(
             teacher_password=teacher_password,
             student_password=student_password,
@@ -214,25 +236,28 @@ def process_provision() -> Response:
             lockout_system=True,
         )
 
-    except AccountAlreadyExistsError as exc:
+    except AccountAlreadyExistsError:
         db.session.rollback()
+        current_app.logger.warning("Provisioning rejected: one or more accounts already exist.")
         resp = make_response(
             render_template(
                 "provision/setup.html",
-                error=f"{exc} Aborting to avoid silent overwrite.",
+                error="One or more accounts already exist. Provisioning aborted to prevent overwriting existing data.",
             ),
             409,
         )
         return _set_security_headers(resp)
-    except IntegrityError:
+    except IntegrityError as exc:
         db.session.rollback()
+        current_app.logger.error("Provisioning integrity error: %s", exc)
         abort(404)
     except Exception as exc:
         db.session.rollback()
+        current_app.logger.error("Provisioning transaction error: %s", exc, exc_info=True)
         resp = make_response(
             render_template(
                 "provision/setup.html",
-                error=f"Provisioning transaction failed: {exc}",
+                error="An error occurred while processing the provisioning request. Please check the system logs.",
             ),
             500,
         )

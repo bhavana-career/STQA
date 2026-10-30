@@ -229,19 +229,6 @@ def provision_accounts(
             )
             db.session.add(assignment)
 
-        # 7. Provision additional STQA scenario students and curriculum when standard demo setup
-        if norm_teacher_id == "TCH001" and norm_student_id == "4INI23IS036":
-            from app.services.seed_data import provision_stqa_scenario
-            try:
-                provision_stqa_scenario(
-                    teacher_password=results.get("teacher_password") or teacher_password or "Stqa@Demo2026!",
-                    student_password=results.get("student_password") or student_password or "Stqa@Demo2026!",
-                    overwrite_passwords=False,
-                    lockout_system=False,
-                )
-            except Exception:
-                pass
-
         db.session.commit()
 
         # 7. Verification of independent authentication
