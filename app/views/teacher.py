@@ -84,6 +84,16 @@ def get_students():
                 "academic_year": exam.academic_year,
             },
             "students": [],
+            "insights": {
+                "total_students": 0,
+                "evaluated_students": 0,
+                "pass_count": 0,
+                "fail_count": 0,
+                "incomplete_count": 0,
+                "class_average_percentage": None,
+                "class_average_total": None,
+                "subject_performance": [],
+            },
         }), 200
 
     # Group assigned subject codes by student_id
@@ -134,6 +144,15 @@ def get_students():
         ]
         summary = compute_result(entries)
 
+        student_marks_dict = {
+            es.subject.code: (
+                str(marks_by_student_es.get((s.id, es.id)))
+                if marks_by_student_es.get((s.id, es.id)) is not None
+                else None
+            )
+            for es in exam_subjects
+        }
+
         students_data.append({
             "id": s.id,
             "student_code": s.student_code,
@@ -142,7 +161,81 @@ def get_students():
             "roll_number": s.roll_number,
             "assigned_subjects": student_assigned_codes.get(s.id, []),
             "result_status": summary.status,
+            "total_obtained": str(summary.total_obtained) if summary.total_obtained is not None else None,
+            "total_max": str(summary.total_max),
+            "percentage": str(summary.percentage) if summary.percentage is not None else None,
+            "grade": summary.grade,
+            "grade_description": summary.grade_description,
+            "marks": student_marks_dict,
         })
+
+    # Calculate Teacher Insights: Class Average & Subject-wise Performance
+    completed_students = [
+        s for s in students_data if s["result_status"] != "INCOMPLETE" and s["percentage"] is not None
+    ]
+    if completed_students:
+        avg_pct = (
+            sum(Decimal(s["percentage"]) for s in completed_students) / Decimal(len(completed_students))
+        ).quantize(Decimal("0.01"))
+        avg_tot = (
+            sum(Decimal(s["total_obtained"]) for s in completed_students) / Decimal(len(completed_students))
+        ).quantize(Decimal("0.01"))
+        class_avg_pct = str(avg_pct)
+        class_avg_tot = str(avg_tot)
+    else:
+        class_avg_pct = None
+        class_avg_tot = None
+
+    pass_count = sum(1 for s in students_data if s["result_status"] == "PASS")
+    fail_count = sum(1 for s in students_data if s["result_status"] == "FAIL")
+    incomplete_count = sum(1 for s in students_data if s["result_status"] == "INCOMPLETE")
+
+    subject_performance: list[dict[str, Any]] = []
+    for es in exam_subjects:
+        valid_marks = [
+            marks_by_student_es[(s.id, es.id)]
+            for s in students
+            if marks_by_student_es.get((s.id, es.id)) is not None
+        ]
+        if valid_marks:
+            sub_avg = (sum(valid_marks) / Decimal(len(valid_marks))).quantize(Decimal("0.01"))
+            sub_passed = sum(1 for m in valid_marks if m >= es.pass_marks)
+            sub_pass_rate = ((Decimal(sub_passed) / Decimal(len(valid_marks))) * Decimal("100")).quantize(
+                Decimal("0.01")
+            )
+            highest_mark = max(valid_marks)
+            lowest_mark = min(valid_marks)
+        else:
+            sub_avg = None
+            sub_passed = 0
+            sub_pass_rate = None
+            highest_mark = None
+            lowest_mark = None
+
+        subject_performance.append({
+            "subject_id": es.subject.id,
+            "code": es.subject.code,
+            "name": es.subject.name,
+            "max_marks": str(es.max_marks),
+            "pass_marks": str(es.pass_marks),
+            "appeared_count": len(valid_marks),
+            "passed_count": sub_passed,
+            "pass_rate": str(sub_pass_rate) if sub_pass_rate is not None else None,
+            "average_marks": str(sub_avg) if sub_avg is not None else None,
+            "highest_mark": str(highest_mark) if highest_mark is not None else None,
+            "lowest_mark": str(lowest_mark) if lowest_mark is not None else None,
+        })
+
+    insights = {
+        "total_students": len(students_data),
+        "evaluated_students": len(completed_students),
+        "pass_count": pass_count,
+        "fail_count": fail_count,
+        "incomplete_count": incomplete_count,
+        "class_average_percentage": class_avg_pct,
+        "class_average_total": class_avg_tot,
+        "subject_performance": subject_performance,
+    }
 
     return jsonify({
         "exam": {
@@ -151,6 +244,7 @@ def get_students():
             "academic_year": exam.academic_year,
         },
         "students": students_data,
+        "insights": insights,
     }), 200
 
 

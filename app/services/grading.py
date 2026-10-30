@@ -25,6 +25,24 @@ DEFAULT_GRADE_BANDS: tuple[tuple[str, Decimal], ...] = (
     ("D", Decimal("35.00")),
 )
 
+GRADE_DESCRIPTIONS: dict[str, str] = {
+    "A1": "Outstanding / Distinction",
+    "A2": "Excellent",
+    "B1": "Very Good",
+    "B2": "Good",
+    "C1": "Above Average",
+    "C2": "Average",
+    "D": "Minimum Pass",
+    "E": "Unsatisfactory / Fail",
+}
+
+
+def grade_description(grade: str | None) -> str:
+    """Return academic performance descriptor for a letter grade."""
+    if not grade:
+        return "—"
+    return GRADE_DESCRIPTIONS.get(grade, grade)
+
 
 @dataclass(frozen=True)
 class GradingConfig:
@@ -49,6 +67,7 @@ class SubjectResult:
     marks_obtained: Decimal | None
     percentage: Decimal | None = None
     grade: str | None = None
+    grade_description: str | None = None
     passed: bool | None = None
 
 
@@ -61,6 +80,7 @@ class ExamResultSummary:
     total_max: Decimal
     percentage: Decimal | None
     grade: str | None
+    grade_description: str | None = None
     subjects: list[SubjectResult] = field(default_factory=list)
 
 
@@ -186,6 +206,7 @@ def compute_result(
                     marks_obtained=Decimal(str(e.marks_obtained)),
                     percentage=pct_val,
                     grade=gr_val,
+                    grade_description=grade_description(gr_val),
                     passed=pass_val,
                 )
             )
@@ -197,6 +218,7 @@ def compute_result(
             total_max=total_max,
             percentage=None,
             grade=None,
+            grade_description=None,
             subjects=evaluated_subjects,
         )
 
@@ -219,5 +241,6 @@ def compute_result(
         total_max=total_max,
         percentage=overall_pct,
         grade=overall_grade,
+        grade_description=grade_description(overall_grade),
         subjects=evaluated_subjects,
     )

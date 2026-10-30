@@ -435,6 +435,26 @@ def register_cli(app: Flask) -> None:
         click.echo("  Password status: [CONFIGURED SECURELY — NOT ECHOED TO LOGS]")
         click.secho("Verification: SUCCESS (Linked to Mathematics in 10th Standard Section A)\n", fg="green")
 
+    @app.cli.command("seed-stqa")
+    @click.option("--teacher-password", default=None, help="Custom password for general teacher (TCH001)")
+    @click.option("--student-password", default=None, help="Custom password for student accounts")
+    @click.option("--overwrite", is_flag=True, help="Force overwrite passwords if accounts already exist")
+    def seed_stqa_cmd(teacher_password: str | None, student_password: str | None, overwrite: bool) -> None:
+        """Seed official STQA testing scenario (1 general teacher, 5 students, 5 subjects, realistic marks)."""
+        from .services.seed_data import provision_stqa_scenario
+        summary = provision_stqa_scenario(
+            teacher_password=teacher_password,
+            student_password=student_password,
+            overwrite_passwords=overwrite,
+            lockout_system=False,
+        )
+        click.secho("Success: STQA scenario seeded successfully.", fg="green", bold=True)
+        click.echo(f"  Teacher: {summary['teacher']['login_id']} ({summary['teacher']['name']})")
+        click.echo(f"  Students ({summary['total_students']}): {', '.join(s['login_id'] for s in summary['students'])}")
+        click.echo(f"  Subjects ({summary['total_subjects']}): ENG, HIN, MAT, SCI, SST")
+        click.echo(f"  Assignments: {summary['assignments_created']} total links")
+        click.echo(f"  Marks Seeded: {summary['marks_seeded']} subject marks with audit logging")
+
 
 
 def _get_or_create(model: Any, defaults: dict[str, Any] | None = None, **kwargs: Any) -> Any:

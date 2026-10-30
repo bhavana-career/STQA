@@ -22,7 +22,7 @@
                 Initial Account Provisioning
             </h2>
             <p style="color: var(--muted-color); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.4;">
-                This one-time setup workflow provisions the initial Student (<code>4INI23IS036</code>) and Teacher (<code>TCH001</code>) accounts in production Neon. Once submitted, this route automatically self-locks.
+                This one-time setup workflow provisions the General Teacher (<code>TCH001</code>) and 5 student accounts (<code>4INI23IS036</code>, <code>4INI23IS001</code>, <code>4INI23IS002</code>, <code>4INI23IS003</code>, <code>4INI23IS004</code>) across 5 subjects with realistic marks and full authorization in production Neon. Once submitted, this route automatically self-locks.
             </p>
 
             {% if error %}
@@ -56,7 +56,7 @@
 
                 <!-- Teacher Account Configuration -->
                 <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--primary-color); margin-bottom: 0.75rem;">
-                    Teacher Account (Login ID: <code>TCH001</code>)
+                    General Teacher Account (Login ID: <code>TCH001</code>)
                 </h3>
 
                 <div class="form-group" style="margin-bottom: 1rem;">
@@ -92,14 +92,14 @@
 
                 <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
 
-                <!-- Student Account Configuration -->
+                <!-- Student Accounts Configuration -->
                 <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--primary-color); margin-bottom: 0.75rem;">
-                    Student Account (Login ID: <code>4INI23IS036</code>)
+                    Student Accounts (5 USNs: <code>4INI23IS036</code>, <code>4INI23IS001</code>, ...)
                 </h3>
 
                 <div class="form-group" style="margin-bottom: 1rem;">
                     <label for="student_password" style="display: block; font-weight: 600; margin-bottom: 0.35rem;">
-                        Student Password
+                        Student Demo Password
                     </label>
                     <input type="password"
                            name="student_password"

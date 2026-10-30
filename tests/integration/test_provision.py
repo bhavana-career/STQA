@@ -173,22 +173,26 @@ class TestOneTimeProvisioningWorkflow:
 
             # Profiles
             assert t_user.teacher is not None
-            assert t_user.teacher.full_name == "Mathematics Teacher"
+            assert t_user.teacher.full_name == "General Teacher"
 
             assert s_user.student is not None
             assert s_user.student.roll_number == 36
             assert s_user.student.section.class_name == "10th Standard"
             assert s_user.student.section.name == "A"
 
-            # Subject Assignment
-            assignment = db.session.scalar(
-                select(TeacherAssignment).where(
-                    TeacherAssignment.teacher_id == t_user.teacher.id,
-                    TeacherAssignment.student_id == s_user.student.id,
-                )
-            )
-            assert assignment is not None
-            assert assignment.subject.code == "MAT"
+            # All 5 STQA students must exist
+            all_usns = ["4INI23IS036", "4INI23IS001", "4INI23IS002", "4INI23IS003", "4INI23IS004"]
+            for usn in all_usns:
+                stu_u = db.session.scalar(select(User).where(User.login_id == usn))
+                assert stu_u is not None
+                assert stu_u.role == "student"
+                assert stu_u.check_password(s_pass) is True
+
+            # Subject Assignments: General Teacher assigned across all 5 subjects
+            assignments = db.session.scalars(
+                select(TeacherAssignment).where(TeacherAssignment.teacher_id == t_user.teacher.id)
+            ).all()
+            assert len(assignments) == 25
 
             # Lockout flag recorded
             setting = db.session.scalar(select(SystemSetting).where(SystemSetting.key == "bootstrap_completed"))

@@ -43,6 +43,9 @@
 
             const data = await response.json();
             currentExamId = data.exam.id;
+            if (data.insights) {
+                renderInsights(data.insights);
+            }
             renderStudents(data.students);
         } catch (err) {
             loadingDiv.style.display = "none";
@@ -51,13 +54,69 @@
         }
     }
 
+    function renderInsights(insights) {
+        const insightsCard = document.getElementById("insights-container");
+        if (!insightsCard) return;
+
+        const avgEl = document.getElementById("insight-class-avg");
+        const totalEl = document.getElementById("insight-class-total");
+        const passRateEl = document.getElementById("insight-pass-rate");
+        const passCountsEl = document.getElementById("insight-pass-counts");
+        const totalStuEl = document.getElementById("insight-total-students");
+        const evalStuEl = document.getElementById("insight-eval-students");
+        const subjTbody = document.getElementById("insights-subject-tbody");
+
+        if (insights.class_average_percentage !== null) {
+            avgEl.textContent = `${insights.class_average_percentage}%`;
+            totalEl.textContent = `Avg Total: ${insights.class_average_total} marks`;
+        } else {
+            avgEl.textContent = "—";
+            totalEl.textContent = "No marks entered yet";
+        }
+
+        if (insights.evaluated_students > 0) {
+            const pct = ((insights.pass_count / insights.evaluated_students) * 100).toFixed(2);
+            passRateEl.textContent = `${pct}%`;
+            passCountsEl.textContent = `${insights.pass_count} Passed · ${insights.fail_count} Failed · ${insights.incomplete_count} Incomplete`;
+        } else {
+            passRateEl.textContent = "—";
+            passCountsEl.textContent = `${insights.incomplete_count} Incomplete`;
+        }
+
+        totalStuEl.textContent = `${insights.total_students}`;
+        evalStuEl.textContent = `${insights.evaluated_students} of ${insights.total_students} completed`;
+
+        if (subjTbody && Array.isArray(insights.subject_performance)) {
+            subjTbody.innerHTML = "";
+            insights.subject_performance.forEach(sub => {
+                const tr = document.createElement("tr");
+                const avgDisplay = sub.average_marks !== null ? `<strong>${sub.average_marks}</strong>` : "—";
+                const highDisplay = sub.highest_mark !== null ? sub.highest_mark : "—";
+                const lowDisplay = sub.lowest_mark !== null ? sub.lowest_mark : "—";
+                const passRateDisplay = sub.pass_rate !== null ? `${sub.pass_rate}% (${sub.passed_count}/${sub.appeared_count})` : "—";
+
+                tr.innerHTML = `
+                    <td><strong>${sub.name}</strong> <span class="badge-pill">${sub.code}</span></td>
+                    <td>${sub.max_marks}</td>
+                    <td>${avgDisplay}</td>
+                    <td>${highDisplay}</td>
+                    <td>${lowDisplay}</td>
+                    <td>${passRateDisplay}</td>
+                `;
+                subjTbody.appendChild(tr);
+            });
+        }
+
+        insightsCard.style.display = "block";
+    }
+
     function renderStudents(students) {
         loadingDiv.style.display = "none";
         tableContainer.style.display = "block";
         tbody.innerHTML = "";
 
         if (students.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--muted-color); padding: 2.5rem;">
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--muted-color); padding: 2.5rem;">
                 <div class="empty-state">
                     <h3>No Assigned Students</h3>
                     <p>You currently do not have any students assigned for subject marks entry.</p>
@@ -80,6 +139,12 @@
 
             const subjectPills = s.assigned_subjects.map(c => `<span class="badge-pill">${c}</span>`).join(" ");
 
+            let marksSummaryText = "—";
+            if (s.total_obtained !== null && s.percentage !== null) {
+                const gradeLabel = s.grade ? `${s.grade}` : "";
+                marksSummaryText = `<strong>${s.percentage}%</strong> (${s.total_obtained}/${s.total_max}) <span class="badge-pill" style="margin-left: 0.25rem;">${gradeLabel}</span>`;
+            }
+
             tr.innerHTML = `
                 <td><strong>${s.student_code}</strong></td>
                 <td>${s.full_name}</td>
@@ -87,6 +152,7 @@
                 <td>${s.roll_number}</td>
                 <td>${subjectPills}</td>
                 <td>${statusBadge}</td>
+                <td>${marksSummaryText}</td>
                 <td>
                     <button type="button" class="btn btn-primary btn-sm btn-edit-student" data-id="${s.id}" data-name="${s.full_name}" data-code="${s.student_code}" aria-haspopup="dialog">
                         Enter Marks

@@ -72,6 +72,54 @@
             </div>
         </div>
 
+        <!-- Teacher Insights & Class Performance Analytics (TC-INSIGHTS) -->
+        <div class="card" id="insights-container" style="display: none;" aria-labelledby="insights-heading">
+            <h2 class="card-title" id="insights-heading" style="margin-bottom: 0.25rem;">Class Performance Insights</h2>
+            <p style="color: var(--muted-color); font-size: 0.9rem; margin-bottom: 1.25rem;">
+                Aggregated academic metrics across assigned students and subject-wise performance breakdown.
+            </p>
+
+            <div class="summary-grid" role="region" aria-label="Class analytics summary" style="margin-top: 0; margin-bottom: 1.5rem;">
+                <div class="summary-card">
+                    <div class="label">Class Average</div>
+                    <div class="value" id="insight-class-avg">—</div>
+                    <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.25rem;" id="insight-class-total">—</small>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Pass Rate</div>
+                    <div class="value" id="insight-pass-rate">—</div>
+                    <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.25rem;" id="insight-pass-counts">—</small>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Assigned Students</div>
+                    <div class="value" id="insight-total-students">—</div>
+                    <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.25rem;" id="insight-eval-students">—</small>
+                </div>
+            </div>
+
+            <div style="margin-top: 1rem;">
+                <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">Subject-Wise Performance</h3>
+                <div class="table-responsive">
+                    <table class="table" id="insights-subject-table">
+                        <caption class="sr-only">Subject performance statistics</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Subject</th>
+                                <th scope="col">Max Marks</th>
+                                <th scope="col">Average Score</th>
+                                <th scope="col">Highest Score</th>
+                                <th scope="col">Lowest Score</th>
+                                <th scope="col">Pass Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody id="insights-subject-tbody">
+                            <!-- Populated dynamically via /api/teacher/students insights -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <div class="card" aria-labelledby="students-list-heading">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                 <div>
@@ -105,6 +153,7 @@
                             <th scope="col">Roll No</th>
                             <th scope="col">Assigned Subjects</th>
                             <th scope="col">Result Status</th>
+                            <th scope="col">Marks / Grade</th>
                             <th scope="col">Action</th>
                         </tr>
                     </thead>

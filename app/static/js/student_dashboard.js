@@ -120,7 +120,17 @@
             sum.total_obtained !== null ? `${sum.total_obtained} / ${sum.total_max}` : `— / ${sum.total_max}`;
         document.getElementById("res-percentage").textContent =
             sum.percentage !== null ? `${sum.percentage}%` : "—";
-        document.getElementById("res-grade").textContent = sum.grade || "—";
+        const gradeEl = document.getElementById("res-grade");
+        const descEl = document.getElementById("res-grade-desc");
+        gradeEl.textContent = sum.grade || "—";
+        if (descEl) {
+            if (sum.grade_description) {
+                descEl.textContent = `(${sum.grade_description})`;
+                descEl.style.display = "inline";
+            } else {
+                descEl.style.display = "none";
+            }
+        }
 
         const statusEl = document.getElementById("res-status");
         statusEl.textContent = sum.status;
@@ -148,13 +158,15 @@
                 passBadge = `<span class="badge badge-incomplete">PENDING</span>`;
             }
 
+            const subGradeText = sub.grade ? (sub.grade_description ? `${sub.grade} (${sub.grade_description})` : sub.grade) : "—";
+
             tr.innerHTML = `
                 <td><strong>${sub.name}</strong> <span class="badge-pill">${sub.code}</span></td>
                 <td>${sub.max_marks}</td>
                 <td>${sub.pass_marks}</td>
                 <td><strong>${sub.marks_obtained !== null ? sub.marks_obtained : "—"}</strong></td>
                 <td>${sub.percentage !== null ? `${sub.percentage}%` : "—"}</td>
-                <td>${sub.grade || "—"}</td>
+                <td>${subGradeText}</td>
                 <td>${passBadge}</td>
             `;
             tbody.appendChild(tr);

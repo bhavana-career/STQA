@@ -44,6 +44,7 @@ from ..models import (
     utc_now,
 )
 from ..services.password_policy import validate_password_strength
+from ..services.seed_data import AccountAlreadyExistsError, provision_stqa_scenario
 
 bp = Blueprint("provision", __name__, url_prefix="/system")
 
@@ -205,135 +206,24 @@ def process_provision() -> Response:
             db.session.rollback()
             abort(404)
 
-        # 2. Never overwrite existing passwords silently
-        existing_teacher = db.session.scalar(select(User).where(User.login_id == "TCH001"))
-        if existing_teacher and existing_teacher.password_hash:
-            db.session.rollback()
-            resp = make_response(
-                render_template(
-                    "provision/setup.html",
-                    error="Teacher account TCH001 already exists with an active password. Aborting to avoid silent overwrite.",
-                ),
-                409,
-            )
-            return _set_security_headers(resp)
-
-        existing_student = db.session.scalar(select(User).where(User.login_id == "4INI23IS036"))
-        if existing_student and existing_student.password_hash:
-            db.session.rollback()
-            resp = make_response(
-                render_template(
-                    "provision/setup.html",
-                    error="Student account 4INI23IS036 already exists with an active password. Aborting to avoid silent overwrite.",
-                ),
-                409,
-            )
-            return _set_security_headers(resp)
-
-        # 3. Section: 10th Standard Section A (2025-26)
-        sec = db.session.scalar(
-            select(Section).where(
-                Section.class_name == "10th Standard",
-                Section.name == "A",
-                Section.academic_year == "2025-26",
-            )
+        # 2. Provision STQA Testing Scenario (General Teacher TCH001, 5 Students, 5 Subjects, 25 Assignments, Realistic Marks)
+        summary = provision_stqa_scenario(
+            teacher_password=teacher_password,
+            student_password=student_password,
+            overwrite_passwords=False,
+            lockout_system=True,
         )
-        if not sec:
-            sec = Section(class_name="10th Standard", name="A", academic_year="2025-26")
-            db.session.add(sec)
-            db.session.flush()
 
-        # 4. Subject: Mathematics (MAT)
-        sub_mat = db.session.scalar(select(Subject).where(Subject.code == "MAT"))
-        if not sub_mat:
-            sub_mat = Subject(code="MAT", name="Mathematics")
-            db.session.add(sub_mat)
-            db.session.flush()
-
-        # 5. Exam: Annual Examination 2025-26
-        exam = db.session.scalar(select(Exam).where(Exam.academic_year == "2025-26"))
-        if not exam:
-            exam = Exam(name="Annual Examination 2025-26", academic_year="2025-26")
-            db.session.add(exam)
-            db.session.flush()
-
-        es = db.session.scalar(
-            select(ExamSubject).where(ExamSubject.exam_id == exam.id, ExamSubject.subject_id == sub_mat.id)
+    except AccountAlreadyExistsError as exc:
+        db.session.rollback()
+        resp = make_response(
+            render_template(
+                "provision/setup.html",
+                error=f"{exc} Aborting to avoid silent overwrite.",
+            ),
+            409,
         )
-        if not es:
-            es = ExamSubject(
-                exam_id=exam.id,
-                subject_id=sub_mat.id,
-                max_marks=Decimal("100.00"),
-                pass_marks=Decimal("35.00"),
-            )
-            db.session.add(es)
-            db.session.flush()
-
-        # 6. Teacher Account (TCH001)
-        if not existing_teacher:
-            teacher_user = User(login_id="TCH001", role="teacher")
-            teacher_user.set_password(teacher_password)
-            db.session.add(teacher_user)
-            db.session.flush()
-
-            teacher_record = Teacher(
-                user_id=teacher_user.id,
-                teacher_code="TCH001",
-                full_name="Mathematics Teacher",
-            )
-            db.session.add(teacher_record)
-            db.session.flush()
-        else:
-            teacher_record = existing_teacher.teacher
-            existing_teacher.set_password(teacher_password)
-
-        # 7. Student Account (4INI23IS036)
-        if not existing_student:
-            student_user = User(login_id="4INI23IS036", role="student")
-            student_user.set_password(student_password)
-            db.session.add(student_user)
-            db.session.flush()
-
-            student_record = Student(
-                user_id=student_user.id,
-                student_code="4INI23IS036",
-                full_name="Student 4INI23IS036",
-                section_id=sec.id,
-                roll_number=36,
-            )
-            db.session.add(student_record)
-            db.session.flush()
-        else:
-            student_record = existing_student.student
-            existing_student.set_password(student_password)
-
-        # 8. Teacher Assignment
-        assignment = db.session.scalar(
-            select(TeacherAssignment).where(
-                TeacherAssignment.teacher_id == teacher_record.id,
-                TeacherAssignment.student_id == student_record.id,
-                TeacherAssignment.subject_id == sub_mat.id,
-            )
-        )
-        if not assignment:
-            assignment = TeacherAssignment(
-                teacher_id=teacher_record.id,
-                student_id=student_record.id,
-                subject_id=sub_mat.id,
-            )
-            db.session.add(assignment)
-
-        # 9. Commit Lockout Flag atomically
-        if setting:
-            setting.value = "true"
-            setting.updated_at = utc_now()
-        else:
-            setting = SystemSetting(key="bootstrap_completed", value="true")
-            db.session.add(setting)
-
-        db.session.commit()
-
+        return _set_security_headers(resp)
     except IntegrityError:
         db.session.rollback()
         abort(404)
@@ -348,5 +238,5 @@ def process_provision() -> Response:
         )
         return _set_security_headers(resp)
 
-    resp = make_response(render_template("provision/success.html"))
+    resp = make_response(render_template("provision/success.html", summary=summary))
     return _set_security_headers(resp)

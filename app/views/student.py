@@ -148,6 +148,7 @@ def _build_student_result_response():
                 "pass_marks": str(sub.pass_marks),
                 "percentage": str(sub.percentage) if sub.percentage is not None else None,
                 "grade": sub.grade,
+                "grade_description": sub.grade_description,
                 "passed": sub.passed,
             }
         )
@@ -174,6 +175,7 @@ def _build_student_result_response():
             "total_max": str(summary.total_max),
             "percentage": str(summary.percentage) if summary.percentage is not None else None,
             "grade": summary.grade,
+            "grade_description": summary.grade_description,
         },
     }
 
