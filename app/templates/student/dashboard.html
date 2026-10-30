@@ -10,7 +10,10 @@
 <body>
     <header class="site-header">
         <div class="container header-container">
-            <h1 class="portal-title">Student Portal</h1>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <h1 class="portal-title">Student Portal</h1>
+                <span class="demo-badge">Demo Mode</span>
+            </div>
             <div class="header-user-info" style="display: flex; align-items: center; gap: 1rem;">
                 <span>Logged in as: <strong>{{ current_user.login_id }}</strong></span>
                 <form method="POST" action="{{ url_for('auth.logout') }}" style="display: inline;">
@@ -21,18 +24,252 @@
         </div>
     </header>
 
-    <main class="container main-content" style="padding: 2rem 0;">
-        <div class="card" style="padding: 1.5rem; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-            <h2>Student Dashboard</h2>
-            <p>Welcome to the 10th Standard Academic Result Portal.</p>
-            <p>Student Account: <code>{{ current_user.login_id }}</code></p>
+    <main class="container main-content">
+        <div class="card">
+            <h2 class="card-title">Student Profile</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                <div>
+                    <span style="color: var(--muted-color); font-size: 0.85rem;">Full Name:</span>
+                    <p style="font-weight: 600; font-size: 1.1rem;" id="student-name">{{ student.full_name }}</p>
+                </div>
+                <div>
+                    <span style="color: var(--muted-color); font-size: 0.85rem;">Student ID:</span>
+                    <p style="font-weight: 600; font-size: 1.1rem;" id="student-code"><code>{{ current_user.login_id }}</code></p>
+                </div>
+                <div>
+                    <span style="color: var(--muted-color); font-size: 0.85rem;">Class & Section:</span>
+                    <p style="font-weight: 600; font-size: 1.1rem;">{{ student.section.class_name }} — Section {{ student.section.name }}</p>
+                </div>
+                <div>
+                    <span style="color: var(--muted-color); font-size: 0.85rem;">Roll Number:</span>
+                    <p style="font-weight: 600; font-size: 1.1rem;">{{ student.roll_number }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Examination Results</h2>
+            <p style="color: var(--muted-color); margin-bottom: 1.25rem;">
+                Official academic results for standard 10th examinations. All calculations are verified server-side.
+            </p>
+            {% if latest_exam %}
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding: 1rem; background: #f8fafc; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <div>
+                        <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--primary-color);">{{ latest_exam.name }}</h3>
+                        <p style="color: var(--muted-color); font-size: 0.85rem;">Academic Year: {{ latest_exam.academic_year }}</p>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="btn-view-result" aria-haspopup="dialog">
+                        View Detailed Result
+                    </button>
+                </div>
+            {% else %}
+                <p style="color: var(--muted-color);">No published examinations available.</p>
+            {% endif %}
         </div>
     </main>
+
+    <!-- Result Modal (TC-UI-04, TC-UI-05) -->
+    <div class="modal-backdrop" id="result-modal-backdrop" aria-hidden="true">
+        <div class="modal-dialog" id="result-modal" role="dialog" aria-modal="true" aria-labelledby="result-modal-title" tabindex="-1">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title" id="result-modal-title">Official Statement of Marks</h2>
+                    <span class="demo-badge" style="margin-top: 0.25rem;">Fictional Sample Data Only</span>
+                </div>
+                <button type="button" class="modal-close" id="modal-close-btn" aria-label="Close dialog">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-content-area">
+                <div id="modal-loading" style="text-align: center; padding: 2rem;">
+                    <p>Loading result data from secure server...</p>
+                </div>
+                <div id="modal-error" class="alert alert-error" style="display: none;" role="alert"></div>
+                <div id="modal-result-content" style="display: none;">
+                    <div style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--muted-color);" id="exam-header-info"></div>
+
+                    <!-- Summary Grid -->
+                    <div class="summary-grid">
+                        <div class="summary-card">
+                            <div class="label">Total Marks</div>
+                            <div class="value" id="res-total">—</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="label">Percentage</div>
+                            <div class="value" id="res-percentage">—</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="label">Grade</div>
+                            <div class="value" id="res-grade">—</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="label">Status</div>
+                            <div class="value" id="res-status">—</div>
+                        </div>
+                    </div>
+
+                    <!-- Subject Wise Table -->
+                    <div class="table-responsive">
+                        <table class="table" id="subjects-table">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Max Marks</th>
+                                    <th>Pass Marks</th>
+                                    <th>Marks Obtained</th>
+                                    <th>Percentage</th>
+                                    <th>Grade</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subjects-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" id="btn-modal-close-footer">Close</button>
+            </div>
+        </div>
+    </div>
 
     <footer class="site-footer">
         <div class="container">
             <p>&copy; 2026 SRMS Academic Lab Project. Fictional sample data only.</p>
         </div>
     </footer>
+
+    <script>
+    (function () {
+        const viewBtn = document.getElementById("btn-view-result");
+        const backdrop = document.getElementById("result-modal-backdrop");
+        const modal = document.getElementById("result-modal");
+        const closeBtn = document.getElementById("modal-close-btn");
+        const footerCloseBtn = document.getElementById("btn-modal-close-footer");
+
+        const loadingDiv = document.getElementById("modal-loading");
+        const errorDiv = document.getElementById("modal-error");
+        const contentDiv = document.getElementById("modal-result-content");
+
+        let lastActiveElement = null;
+
+        function openModal() {
+            lastActiveElement = document.activeElement;
+            backdrop.classList.add("is-active");
+            backdrop.setAttribute("aria-hidden", "false");
+            modal.focus();
+            loadResult();
+        }
+
+        function closeModal() {
+            backdrop.classList.remove("is-active");
+            backdrop.setAttribute("aria-hidden", "true");
+            if (lastActiveElement) {
+                lastActiveElement.focus();
+            }
+        }
+
+        if (viewBtn) {
+            viewBtn.addEventListener("click", openModal);
+        }
+        if (closeBtn) {
+            closeBtn.addEventListener("click", closeModal);
+        }
+        if (footerCloseBtn) {
+            footerCloseBtn.addEventListener("click", closeModal);
+        }
+
+        // Close on Esc key (TC-UI-05)
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && backdrop.classList.contains("is-active")) {
+                closeModal();
+            }
+        });
+
+        // Close on clicking backdrop outside modal
+        backdrop.addEventListener("click", function (e) {
+            if (e.target === backdrop) {
+                closeModal();
+            }
+        });
+
+        async function loadResult() {
+            loadingDiv.style.display = "block";
+            errorDiv.style.display = "none";
+            contentDiv.style.display = "none";
+
+            try {
+                const response = await fetch("/api/student/result", {
+                    headers: { "Accept": "application/json" }
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error?.message || "Failed to load examination result.");
+                }
+
+                const data = await response.json();
+                renderResult(data);
+            } catch (err) {
+                loadingDiv.style.display = "none";
+                errorDiv.textContent = err.message;
+                errorDiv.style.display = "block";
+            }
+        }
+
+        function renderResult(data) {
+            loadingDiv.style.display = "none";
+            contentDiv.style.display = "block";
+
+            document.getElementById("exam-header-info").textContent =
+                `Exam: ${data.exam.name} (${data.exam.academic_year})`;
+
+            const sum = data.summary;
+            document.getElementById("res-total").textContent =
+                sum.total_obtained !== null ? `${sum.total_obtained} / ${sum.total_max}` : `— / ${sum.total_max}`;
+            document.getElementById("res-percentage").textContent =
+                sum.percentage !== null ? `${sum.percentage}%` : "—";
+            document.getElementById("res-grade").textContent = sum.grade || "—";
+
+            const statusEl = document.getElementById("res-status");
+            statusEl.textContent = sum.status;
+            statusEl.className = "value";
+            if (sum.status === "PASS") {
+                statusEl.innerHTML = `<span class="badge badge-pass">PASS</span>`;
+            } else if (sum.status === "FAIL") {
+                statusEl.innerHTML = `<span class="badge badge-fail">FAIL</span>`;
+            } else {
+                statusEl.innerHTML = `<span class="badge badge-incomplete">INCOMPLETE</span>`;
+            }
+
+            const tbody = document.getElementById("subjects-table-body");
+            tbody.innerHTML = "";
+
+            data.subjects.forEach(sub => {
+                const tr = document.createElement("tr");
+
+                let passBadge = "";
+                if (sub.passed === true) {
+                    passBadge = `<span class="badge badge-pass">PASS</span>`;
+                } else if (sub.passed === false) {
+                    passBadge = `<span class="badge badge-fail">FAIL</span>`;
+                } else {
+                    passBadge = `<span class="badge badge-incomplete">PENDING</span>`;
+                }
+
+                tr.innerHTML = `
+                    <td><strong>${sub.name}</strong> <span class="badge-pill">${sub.code}</span></td>
+                    <td>${sub.max_marks}</td>
+                    <td>${sub.pass_marks}</td>
+                    <td><strong>${sub.marks_obtained !== null ? sub.marks_obtained : "—"}</strong></td>
+                    <td>${sub.percentage !== null ? `${sub.percentage}%` : "—"}</td>
+                    <td>${sub.grade || "—"}</td>
+                    <td>${passBadge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    })();
+    </script>
 </body>
 </html>

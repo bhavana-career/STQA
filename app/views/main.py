@@ -26,3 +26,16 @@ def health():
         db.session.rollback()
         current_app.logger.exception("Health check: database unreachable")
         return jsonify(status="degraded", database="error", version=version), 503
+
+
+@bp.get("/api/student/result")
+def api_student_result():
+    """Proxy route to student result API matching docs/api-design.md."""
+    from ..auth import student_required
+    from .student import _build_student_result_response
+
+    @student_required
+    def _handler():
+        return _build_student_result_response()
+
+    return _handler()

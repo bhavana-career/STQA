@@ -77,65 +77,70 @@ Unless stated, **PC-STD** = "test DB migrated, FX loaded, app in `testing` confi
 |---|---|---|---|---|---|---|---|---|---|
 | TC-AUTHZ-01 | Student → teacher dashboard | S1 logged in | — | GET `/teacher/dashboard`, `/api/teacher/students` | Page 403 template; API 403 JSON | P1 | S | Integration + E2E (TC-UI-08) | **PASS** (`test_tc_authz_01_student_blocked_from_teacher_routes`) |
 | TC-AUTHZ-02 | Student attempts to edit marks | S1 logged in | valid PUT body for S1 | PUT `/api/teacher/students/<S1.id>/marks` | 403; marks unchanged; no audit row | P1 | S | Integration | **PASS** (`test_tc_authz_02_and_04_student_cannot_access_or_edit_marks_api`) |
-| TC-AUTHZ-03 | Student requests another student's result via param | S1 logged in | `?student_id=<S2.id>`, `?student_code=STU_T002` | GET `/api/student/result…` | 200 with **S1's** data only; no S2 data in body | P1 | S | Integration | Deferred to M5 (Student Results API) |
+| TC-AUTHZ-03 | Student requests another student's result via param | S1 logged in | `?student_id=<S2.id>`, `?student_code=STU_T002` | GET `/api/student/result…` | 200 with **S1's** data only; no S2 data in body | P1 | S | Integration | **PASS** (`test_tc_authz_03_student_cannot_view_other_student_result`) |
 | TC-AUTHZ-04 | Student tries teacher marks URL for other student | S1 logged in | S2 id | GET `/api/teacher/students/<S2.id>/marks` | 403 | P1 | S | Integration | **PASS** (`test_tc_authz_02_and_04_student_cannot_access_or_edit_marks_api`) |
-| TC-AUTHZ-05 | Teacher reads unassigned student | T1 logged in | S2 id; non-existent id 999999 | GET marks | 404 for both (identical body) | P1 | S | Integration | Deferred to M5 |
-| TC-AUTHZ-06 | Teacher edits assigned student/subject | T1 logged in | S1: ENG 78, MAT 91.5 | PUT | 200; DB values updated; 2 audit rows by T1 | P1 | F | Integration + E2E (TC-UI-06) | Deferred to M5 |
-| TC-AUTHZ-07 | Teacher edits unassigned student | T1 logged in | S2: ENG 50 | PUT | 404; nothing saved | P1 | S | Integration | Deferred to M5 |
-| TC-AUTHZ-08 | Teacher mixes assigned + unassigned subjects | T1 logged in | S1: ENG 70, SCI 60 | PUT | 403; **ENG not saved either** (atomic) | P1 | S | Integration | Deferred to M5 |
-| TC-AUTHZ-09 | Client tampers protected fields | T1 logged in | body adds `student_id: S2.id`, `total: 500`, `grade: "A1"`, `role: "admin"`, `teacher_id: T2.id` | PUT for S1 | 422 `validation_error` (unknown keys); nothing saved; S2 untouched | P1 | S | Integration | Deferred to M5 |
+| TC-AUTHZ-05 | Teacher reads unassigned student | T1 logged in | S2 id; non-existent id 999999 | GET marks | 404 for both (identical body) | P1 | S | Integration | **PASS** (`test_tc_authz_05_teacher_reads_unassigned_student_returns_404`) |
+| TC-AUTHZ-06 | Teacher edits assigned student/subject | T1 logged in | S1: ENG 78, MAT 91.5 | PUT | 200; DB values updated; 2 audit rows by T1 | P1 | F | Integration + E2E (TC-UI-06) | **PASS** (`test_tc_mark_02_and_08_save_multiple_subjects_atomically_and_audit`) |
+| TC-AUTHZ-07 | Teacher edits unassigned student | T1 logged in | S2: ENG 50 | PUT | 404; nothing saved | P1 | S | Integration | **PASS** (`test_tc_authz_07_teacher_edits_unassigned_student_returns_404`) |
+| TC-AUTHZ-08 | Teacher mixes assigned + unassigned subjects | T1 logged in | S1: ENG 70, SCI 60 | PUT | 403; **ENG not saved either** (atomic) | P1 | S | Integration | **PASS** (`test_tc_authz_08_teacher_mixes_assigned_and_unassigned_subjects`) |
+| TC-AUTHZ-09 | Client tampers protected fields | T1 logged in | body adds `student_id: S2.id`, `total: 500`, `grade: "A1"`, `role: "admin"`, `teacher_id: T2.id` | PUT for S1 | 422 `validation_error` (unknown keys); nothing saved; S2 untouched | P1 | S | Integration | **PASS** (`test_tc_authz_09_tampered_request_body_rejected_with_422`) |
 | TC-AUTHZ-10 | Unauthenticated protected APIs | Anonymous | each protected API route/method | request | 401 JSON envelope for every route | P1 | S | Integration (parametrized) | **PASS** (`test_tc_authz_10_unauthenticated_protected_apis_return_401`) |
 | TC-AUTHZ-11 | No registration / role escalation | Anonymous | GET/POST `/register`, `/signup`; login POST with extra `role=teacher` for S1 on teacher page | requests | 404 for registration; role field ignored → 401 | P2 | S | Integration | **PASS** (`test_tc_authz_11_no_registration_route_exists`) |
-| TC-AUTHZ-12 | Teacher with no assignments | T3 logged in | — | GET `/api/teacher/students` | 200 empty list | P3 | F | Integration | Deferred to M5 |
+| TC-AUTHZ-12 | Teacher with no assignments | T3 logged in | — | GET `/api/teacher/students` | 200 empty list | P3 | F | Integration | **PASS** (`test_tc_mark_01_and_authz_12_teacher_students_listing`) |
 
 ## 4. Marks entry and validation (TC-MARK)
 
-| ID | Title | Preconditions | Test data | Steps | Expected result | Pri | Type | Automation |
-|---|---|---|---|---|---|---|---|---|
-| TC-MARK-01 | Teacher list shows only assigned students | T1 logged in | — | GET `/api/teacher/students` | Only S1 with `assigned_subjects=["ENG","MAT"]` | P1 | F,S | Integration |
-| TC-MARK-02 | Save multiple subjects atomically | T2 logged in | S1: HIN 60, SCI 72.5, SST 35 | PUT | 200 `saved=3`; recomputed summary returned | P1 | F | Integration |
-| TC-MARK-03 | Malformed values rejected | T1 logged in | `"abc"`, `""`, `" "`, `"1e2"`, `"NaN"`, `"Infinity"`, `true`, `[]`, `{}`, `"12,5"`, `"0x10"` | PUT each (ENG) | 422, field error for ENG; DB unchanged | P1 | N | Unit (parser) + Integration |
-| TC-MARK-04 | Invalid step | T1 | `78.25`, `78.3`, `0.1` | PUT | 422 "Marks must be in steps of 0.5" | P2 | N,B | Unit + Integration |
-| TC-MARK-05 | Unknown exam | T1 | `exam_id: 999999`, `exam_id: "1"`, missing | PUT | 422 | P2 | N | Integration |
-| TC-MARK-06 | Unknown subject / subject not in exam | T1; subject `ART` exists but not in E1 | `subject_id: 999999`; ART id | PUT | 422; nothing saved | P2 | N | Integration |
-| TC-MARK-07 | Clear a mark | S1 ENG=78 saved by T1 | ENG `null` | PUT | 200; `marks_obtained` NULL; audit `clear`; S1 result `INCOMPLETE` | P2 | F | Integration |
-| TC-MARK-08 | Audit trail recorded | T1 | ENG 50 → 60 | PUT twice | Audit rows: `create (NULL→50)`, `update (50→60)`, `changed_by=T1.user_id` | P2 | F | Integration |
-| TC-MARK-09 | Duplicate subject in request | T1 | ENG twice | PUT | 422 | P3 | N | Integration |
-| TC-MARK-10 | Malformed body | T1 | non-JSON, JSON array, `marks: []`, 21 items | PUT | 400 / 422 | P3 | N | Integration |
+| ID | Title | Preconditions | Test data | Steps | Expected result | Pri | Type | Automation | Status (M5) |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-MARK-01 | Teacher list shows only assigned students | T1 logged in | — | GET `/api/teacher/students` | Only S1 with `assigned_subjects=["ENG","MAT"]` | P1 | F,S | Integration | **PASS** (`test_tc_mark_01_and_authz_12_teacher_students_listing`) |
+| TC-MARK-02 | Save multiple subjects atomically | T2 logged in | S1: HIN 60, SCI 72.5, SST 35 | PUT | 200 `saved=3`; recomputed summary returned | P1 | F | Integration | **PASS** (`test_tc_mark_02_and_08_save_multiple_subjects_atomically_and_audit`) |
+| TC-MARK-03 | Malformed values rejected | T1 logged in | `"abc"`, `""`, `" "`, `"1e2"`, `"NaN"`, `"Infinity"`, `true`, `[]`, `{}`, `"12,5"`, `"0x10"` | PUT each (ENG) | 422, field error for ENG; DB unchanged | P1 | N | Unit (parser) + Integration | **PASS** (`test_tc_mark_03_and_04_invalid_mark_inputs_rejected`) |
+| TC-MARK-04 | Invalid step | T1 | `78.25`, `78.3`, `0.1` | PUT | 422 "Marks must be in steps of 0.5" | P2 | N,B | Unit + Integration | **PASS** (`test_tc_mark_03_and_04_invalid_mark_inputs_rejected`) |
+| TC-MARK-05 | Unknown exam | T1 | `exam_id: 999999`, `exam_id: "1"`, missing | PUT | 422 | P2 | N | Integration | **PASS** (`test_tc_mark_05_unknown_or_string_exam_id_rejected`) |
+| TC-MARK-06 | Unknown subject / subject not in exam | T1; subject `ART` exists but not in E1 | `subject_id: 999999`; ART id | PUT | 422; nothing saved | P2 | N | Integration | **PASS** (`test_tc_mark_06_subject_not_in_exam_rejected`) |
+| TC-MARK-07 | Clear a mark | S1 ENG=78 saved by T1 | ENG `null` | PUT | 200; `marks_obtained` NULL; audit `clear`; S1 result `INCOMPLETE` | P2 | F | Integration | **PASS** (`test_tc_mark_07_clear_mark_with_null`) |
+| TC-MARK-08 | Audit trail recorded | T1 | ENG 50 → 60 | PUT twice | Audit rows: `create (NULL→50)`, `update (50→60)`, `changed_by=T1.user_id` | P2 | F | Integration | **PASS** (`test_tc_mark_02_and_08_save_multiple_subjects_atomically_and_audit`) |
+| TC-MARK-09 | Duplicate subject in request | T1 | ENG twice | PUT | 422 | P3 | N | Integration | **PASS** (`test_tc_mark_09_duplicate_subject_in_request_rejected`) |
+| TC-MARK-10 | Malformed body | T1 | non-JSON, JSON array, `marks: []`, 21 items | PUT | 400 / 422 | P3 | N | Integration | **PASS** (`test_tc_mark_10_malformed_body_rejected`) |
 
 ## 5. Result calculation (TC-CALC)
 
 Rules from requirements §4.4.1. All maxima 100, pass 35 unless stated.
 
-| ID | Title | Preconditions | Test data | Steps | Expected result | Pri | Type | Automation |
-|---|---|---|---|---|---|---|---|---|
-| TC-CALC-01 | Mark = 0 accepted | — | `0`, `"0"`, `"0.0"` max 100 | `parse_mark` | `Decimal("0")` | P1 | B | Unit |
-| TC-CALC-02 | Mark = max accepted | — | `100`, `"100.00"`; max 80 → `80` | parse | accepted | P1 | B | Unit |
-| TC-CALC-03 | Negative rejected | — | `-0.5`, `-1`, `"-10"` | parse | `ValidationError` (negative values rejected; sign not accepted by the format rule) | P1 | N,B | Unit |
-| TC-CALC-04 | Above max rejected | — | `100.5`, `101`, `1000`; max 80 → `80.5` | parse | `ValidationError("must be ≤ max")` | P1 | N,B | Unit |
-| TC-CALC-05 | Decimal (0.5 step) supported | — | `0.5`, `78.5`, `99.50` | parse | accepted exactly | P2 | F | Unit |
-| TC-CALC-06 | Missing marks → INCOMPLETE | — | ENG–SCI given, SST missing | `compute_result` | status `INCOMPLETE`; total/percentage/grade `None`; missing subject flagged | P1 | F | Unit + Integration |
-| TC-CALC-07 | All subjects at max | — | 100×5 | compute | 500/500, `100.00`, A1, PASS | P1 | B | Unit |
-| TC-CALC-08 | All subjects zero | — | 0×5 | compute | 0/500, `0.00`, E, FAIL | P1 | B | Unit |
-| TC-CALC-09 | Total and percentage (uniform max) | — | 78, 65, 90, 55, 42 | compute | 330/500, `66.00`, B2, PASS | P1 | F | Unit |
-| TC-CALC-10 | Percentage with non-uniform maxima | — | 80/100, 40/80, 25/50 (pass 35/28/17.5) | compute | 145/230 = `63.04`, B2, PASS | P1 | F | Unit (DEF-001 regression) |
-| TC-CALC-11 | Rounding half-up | — | 1 of 160 → 0.625 | `percentage()` | `0.63` (not banker's `0.62`); 2/3 → `66.67` | P2 | B | Unit |
-| TC-CALC-12 | Grade at every boundary | — | pct: 0, 34.99, 35.00, 39.99, 40.00, 49.99, 50.00, 59.99, 60.00, 69.99, 70.00, 79.99, 80.00, 89.99, 90.00, 100.00 | `grade_for_percentage` | E, E, D, D, C2, C2, C1, C1, B2, B2, B1, B1, A2, A2, A1, A1 | P1 | B | Unit (DEF-002 regression) |
-| TC-CALC-13 | Pass/fail boundaries | — | (a) one subject 34.5, others 100 (b) one subject 35, others 35 (c) all 35.5 (d) one subject 0, others 100 → 80 % | compute | (a) FAIL, grade E (b) PASS 35.00 D (c) PASS 35.50 D (d) FAIL, E despite 80 % | P1 | B | Unit |
-| TC-CALC-14 | Updated marks reflected in result | S1 all 5 marks saved (T1+T2) | change MAT 40 → 90 | PUT, then S1 GET result | total +50, percentage/grade updated | P1 | F,P | Integration |
-| TC-CALC-15 | Server never trusts client values | S1 complete marks; DB updated directly | — | GET result | Summary equals recomputation from DB rows; no client input path exists | P1 | S | Integration |
-| TC-CALC-16 | Grading input guards | — | pct −0.01, 100.01; max 0; obtained > max | grading funcs | `ValueError` | P2 | N | Unit |
-| TC-CALC-17 | Subject grade per subject | — | ENG 89.5 → A2, MAT 90 → A1 | compute | per-subject grades correct | P2 | F | Unit |
+| ID | Title | Preconditions | Test data | Steps | Expected result | Pri | Type | Automation | Status (M5) |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-CALC-01 | Mark = 0 accepted | — | `0`, `"0"`, `"0.0"` max 100 | `parse_mark` | `Decimal("0")` | P1 | B | Unit | **PASS** (`test_zero_mark_accepted`) |
+| TC-CALC-02 | Mark = max accepted | — | `100`, `"100.00"`; max 80 → `80` | parse | accepted | P1 | B | Unit | **PASS** (`test_maximum_mark_accepted`) |
+| TC-CALC-03 | Negative rejected | — | `-0.5`, `-1`, `"-10"` | parse | `ValidationError` (negative values rejected; sign not accepted by the format rule) | P1 | N,B | Unit | **PASS** (`test_negative_marks_rejected`) |
+| TC-CALC-04 | Above max rejected | — | `100.5`, `101`, `1000`; max 80 → `80.5` | parse | `ValidationError("must be ≤ max")` | P1 | N,B | Unit | **PASS** (`test_marks_exceeding_maximum_rejected`) |
+| TC-CALC-05 | Decimal (0.5 step) supported | — | `0.5`, `78.5`, `99.50` | parse | accepted exactly | P2 | F | Unit | **PASS** (`test_decimal_marks_half_step_accepted`) |
+| TC-CALC-06 | Missing marks → INCOMPLETE | — | ENG–SCI given, SST missing | `compute_result` | status `INCOMPLETE`; total/percentage/grade `None`; missing subject flagged | P1 | F | Unit + Integration | **PASS** (`test_missing_marks_yields_incomplete_status`, `test_tc_calc_06_missing_marks_returns_incomplete_status`) |
+| TC-CALC-07 | All subjects at max | — | 100×5 | compute | 500/500, `100.00`, A1, PASS | P1 | B | Unit | **PASS** (`test_all_subjects_at_maximum`) |
+| TC-CALC-08 | All subjects zero | — | 0×5 | compute | 0/500, `0.00`, E, FAIL | P1 | B | Unit | **PASS** (`test_all_subjects_at_zero`) |
+| TC-CALC-09 | Total and percentage (uniform max) | — | 78, 65, 90, 55, 42 | compute | 330/500, `66.00`, B2, PASS | P1 | F | Unit | **PASS** (`test_student_passing_all_subjects`) |
+| TC-CALC-10 | Percentage with non-uniform maxima | — | 80/100, 40/80, 25/50 (pass 35/28/17.5) | compute | 145/230 = `63.04`, B2, PASS | P1 | F | Unit (DEF-001 regression) | **PASS** (`test_def_001_regression_non_uniform_maximums_percentage`) |
+| TC-CALC-11 | Rounding half-up | — | 1 of 160 → 0.625 | `percentage()` | `0.63` (not banker's `0.62`); 2/3 → `66.67` | P2 | B | Unit | **PASS** (`test_percentage_rounding_half_up`) |
+| TC-CALC-12 | Grade at every boundary | — | pct: 0, 34.99, 35.00, 39.99, 40.00, 49.99, 50.00, 59.99, 60.00, 69.99, 70.00, 79.99, 80.00, 89.99, 90.00, 100.00 | `grade_for_percentage` | E, E, D, D, C2, C2, C1, C1, B2, B2, B1, B1, A2, A2, A1, A1 | P1 | B | Unit (DEF-002 regression) | **PASS** (`test_def_002_regression_grade_boundary_precision`) |
+| TC-CALC-13 | Pass/fail boundaries | — | (a) one subject 34.5, others 100 (b) one subject 35, others 35 (c) all 35.5 (d) one subject 0, others 100 → 80 % | compute | (a) FAIL, grade E (b) PASS 35.00 D (c) PASS 35.50 D (d) FAIL, E despite 80 % | P1 | B | Unit | **PASS** (`test_student_fails_one_subject_despite_high_overall_percentage`, `test_student_passes_with_all_subjects_at_exact_pass_mark`) |
+| TC-CALC-14 | Updated marks reflected in result | S1 all 5 marks saved (T1+T2) | change MAT 40 → 90 | PUT, then S1 GET result | total +50, percentage/grade updated | P1 | F,P | Integration | **PASS** (`test_tc_calc_14_updated_marks_reflected_in_result`) |
+| TC-CALC-15 | Server never trusts client values | S1 complete marks; DB updated directly | — | GET result | Summary equals recomputation from DB rows; no client input path exists | P1 | S | Integration | **PASS** (`test_tc_calc_15_server_side_result_calculation_integrity`) |
+| TC-CALC-16 | Grading input guards | — | pct −0.01, 100.01; max 0; obtained > max | grading funcs | `ValueError` | P2 | N | Unit | **PASS** (`test_percentage_out_of_range_raises_value_error`, `test_compute_result_out_of_range_raises_value_error`) |
+| TC-CALC-17 | Subject grade per subject | — | ENG 89.5 → A2, MAT 90 → A1 | compute | per-subject grades correct | P2 | F | Unit | **PASS** (`test_subject_grade_calculation`) |
 
 ## 6. Database and integration (TC-DB)
 
-| ID | Title | Preconditions | Test data | Steps | Expected result | Pri | Type | Automation | Status (M3) |
+| ID | Title | Preconditions | Test data | Steps | Expected result | Pri | Type | Automation | Status (M5) |
 |---|---|---|---|---|---|---|---|---|---|
 | TC-DB-01 | Create & retrieve student | Migrated empty DB | factory student | insert, new session query | Fields round-trip; unique `student_code` enforced (duplicate → IntegrityError) | P2 | F | Integration | **PASS** (`test_duplicate_student_code_rejected`) |
-| TC-DB-02 | Save marks & retrieve after refresh | T1 | S1 ENG 78 | PUT; new client/session GET marks | ENG `78.00` returned | P1 | P | Integration + E2E (TC-UI-06) | Deferred to M4/M5 (API layer) |
+| TC-DB-02 | Save marks & retrieve after refresh | T1 | S1 ENG 78 | PUT; new client/session GET marks | ENG `78.00` returned | P1 | P | Integration + E2E (TC-UI-06) | **PASS** (`test_tc_authz_04_teacher_reads_assigned_student_marks_success`, `test_tc_mark_02_and_08_save_multiple_subjects_atomically_and_audit`) |
 | TC-DB-03 | Invalid FK reference | — | mark with student_id 999999 | direct ORM insert + commit | `IntegrityError`; session rolled back; no row | P2 | N | Integration | **PASS** (`test_invalid_foreign_key_rejected`) |
 | TC-DB-04 | Persistence across app restart | T1 saves S1 ENG 78 | — | dispose engine, `create_app()` new instance, read | Value still 78.00 | P1 | P | Integration | **PASS** (`test_marks_save_and_audit_creation`) |
-| TC-DB-05 | Result consistent with stored marks | S1 complete | — | SQL `SUM(marks_obtained)` vs API `total_obtained` | Equal | P1 | F | Integration | Deferred to M5 |
+| TC-DB-05 | Result consistent with stored marks | S1 complete | — | SQL `SUM(marks_obtained)` vs API `total_obtained` | Equal | P1 | F | Integration | **PASS** (`test_tc_db_05_database_sum_matches_api_total`) |
+| TC-DB-06 | Rollback on multi-step failure | T2; monkeypatch audit insert to raise on 2nd subject | S1 HIN 60, SCI 70, SST 80 | PUT | 500 generic JSON; **no** marks/audit rows changed | P1 | N,P | Integration (DEF-004 regression) | **PASS** (`test_failed_transaction_rolls_back_completely`) |
+| TC-DB-07 | Test DB safety guard | — | `TEST_DATABASE_URL` = `DATABASE_URL`; name without `test` | start pytest session (subprocess) | Session aborts with clear message before touching DB | P1 | S | Integration | **PASS** (conftest safety fixture) |
+| TC-DB-08 | DB unavailable handled safely | App configured with unreachable DB | — | GET `/health`, GET `/api/student/result` (logged-in mocked user) | 503 JSON, no stack trace / credentials in body | P2 | N | Integration | **PASS** (`test_health_endpoint_degraded_when_db_fails`) |
+| TC-DB-09 | Unique (student, exam_subject) | — | two mark rows same pair | insert | IntegrityError | P3 | N | Integration | **PASS** (`test_duplicate_mark_same_student_exam_subject_rejected`) |
+| TC-DB-10 | Migrations up/down | Empty test DB | — | `alembic upgrade head`, `downgrade base`, `upgrade head` | All succeed | P2 | F | Integration | **PASS** (`test_migration_downgrade_and_upgrade_cycle`) |
 | TC-DB-06 | Rollback on multi-step failure | T2; monkeypatch audit insert to raise on 2nd subject | S1 HIN 60, SCI 70, SST 80 | PUT | 500 generic JSON; **no** marks/audit rows changed | P1 | N,P | Integration (DEF-004 regression) | **PASS** (`test_failed_transaction_rolls_back_completely`) |
 | TC-DB-07 | Test DB safety guard | — | `TEST_DATABASE_URL` = `DATABASE_URL`; name without `test` | start pytest session (subprocess) | Session aborts with clear message before touching DB | P1 | S | Integration | **PASS** (conftest safety fixture) |
 | TC-DB-08 | DB unavailable handled safely | App configured with unreachable DB | — | GET `/health`, GET `/api/student/result` (logged-in mocked user) | 503 JSON, no stack trace / credentials in body | P2 | N | Integration | **PASS** (`test_health_endpoint_degraded_when_db_fails`) |

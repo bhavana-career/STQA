@@ -6,11 +6,38 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Teacher Dashboard — SRMS</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <style>
+        .input-mark {
+            width: 100px;
+            padding: 0.35rem 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+        .input-mark:focus {
+            outline: 2px solid var(--primary-color);
+            border-color: transparent;
+        }
+        .input-mark:disabled {
+            background-color: #f1f5f9;
+            color: var(--muted-color);
+            cursor: not-allowed;
+        }
+        .field-error-msg {
+            color: var(--error-color);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            display: block;
+        }
+    </style>
 </head>
 <body>
     <header class="site-header">
         <div class="container header-container">
-            <h1 class="portal-title">Teacher Portal</h1>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <h1 class="portal-title">Teacher Portal</h1>
+                <span class="demo-badge">Marks Entry</span>
+            </div>
             <div class="header-user-info" style="display: flex; align-items: center; gap: 1rem;">
                 <span>Logged in as: <strong>{{ current_user.login_id }}</strong></span>
                 <form method="POST" action="{{ url_for('auth.logout') }}" style="display: inline;">
@@ -21,18 +48,420 @@
         </div>
     </header>
 
-    <main class="container main-content" style="padding: 2rem 0;">
-        <div class="card" style="padding: 1.5rem; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-            <h2>Teacher Dashboard</h2>
-            <p>Welcome to the 10th Standard Academic Marks Management Portal.</p>
-            <p>Teacher Account: <code>{{ current_user.login_id }}</code></p>
+    <main class="container main-content">
+        <div class="card">
+            <h2 class="card-title">Teacher Profile</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 0.75rem;">
+                <div>
+                    <span style="color: var(--muted-color); font-size: 0.85rem;">Teacher Name:</span>
+                    <p style="font-weight: 600; font-size: 1.1rem;">{{ teacher.full_name if teacher else 'Teacher' }}</p>
+                </div>
+                <div>
+                    <span style="color: var(--muted-color); font-size: 0.85rem;">Teacher Code:</span>
+                    <p style="font-weight: 600; font-size: 1.1rem;"><code>{{ current_user.login_id }}</code></p>
+                </div>
+                <div>
+                    <span style="color: var(--muted-color); font-size: 0.85rem;">Active Term:</span>
+                    <p style="font-weight: 600; font-size: 1.1rem;">{{ latest_exam.academic_year if latest_exam else '2025-26' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 class="card-title" style="margin-bottom: 0.25rem;">Assigned Students</h2>
+                    <p style="color: var(--muted-color); font-size: 0.9rem;">
+                        Students and subjects assigned to your account. Select a student to enter or update marks.
+                    </p>
+                </div>
+                {% if latest_exam %}
+                <div>
+                    <span class="badge badge-pill" style="font-size: 0.85rem; padding: 0.35rem 0.75rem;">
+                        Exam: {{ latest_exam.name }}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div id="students-loading" style="text-align: center; padding: 2rem;">
+                <p>Loading assigned students...</p>
+            </div>
+            <div id="students-error" class="alert alert-error" style="display: none;" role="alert"></div>
+
+            <div class="table-responsive" id="students-table-container" style="display: none;">
+                <table class="table" id="students-table">
+                    <thead>
+                        <tr>
+                            <th>Student Code</th>
+                            <th>Full Name</th>
+                            <th>Section</th>
+                            <th>Roll No</th>
+                            <th>Assigned Subjects</th>
+                            <th>Result Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="students-table-body">
+                        <!-- Populated dynamically via /api/teacher/students -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </main>
+
+    <!-- Marks Editor Modal (TC-UI-06) -->
+    <div class="modal-backdrop" id="marks-modal-backdrop" aria-hidden="true">
+        <div class="modal-dialog" id="marks-modal" role="dialog" aria-modal="true" aria-labelledby="marks-modal-title" tabindex="-1" style="max-width: 750px;">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title" id="marks-modal-title">Enter / Edit Marks</h2>
+                    <p id="marks-modal-subtitle" style="font-size: 0.85rem; color: var(--muted-color); margin-top: 0.2rem;"></p>
+                </div>
+                <button type="button" class="modal-close" id="marks-modal-close-btn" aria-label="Close dialog">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="marks-modal-loading" style="text-align: center; padding: 1.5rem;">
+                    <p>Loading marks data...</p>
+                </div>
+                <div id="marks-modal-error" class="alert alert-error" style="display: none;" role="alert"></div>
+                <div id="marks-modal-success" class="alert alert-success" style="display: none;" role="alert"></div>
+
+                <div id="marks-modal-content" style="display: none;">
+                    <!-- Result Summary Preview -->
+                    <div class="summary-grid" style="margin-top: 0;">
+                        <div class="summary-card">
+                            <div class="label">Total Marks</div>
+                            <div class="value" id="modal-res-total">—</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="label">Percentage</div>
+                            <div class="value" id="modal-res-percentage">—</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="label">Grade</div>
+                            <div class="value" id="modal-res-grade">—</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="label">Status</div>
+                            <div class="value" id="modal-res-status">—</div>
+                        </div>
+                    </div>
+
+                    <form id="marks-form" onsubmit="return false;">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Subject</th>
+                                        <th>Max Marks</th>
+                                        <th>Pass Marks</th>
+                                        <th>Marks Obtained</th>
+                                        <th>Status / Edit Permission</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="marks-table-body">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" id="btn-marks-cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-save-marks">Save Marks</button>
+            </div>
+        </div>
+    </div>
 
     <footer class="site-footer">
         <div class="container">
             <p>&copy; 2026 SRMS Academic Lab Project. Fictional sample data only.</p>
         </div>
     </footer>
+
+    <script>
+    (function () {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+        const backdrop = document.getElementById("marks-modal-backdrop");
+        const modal = document.getElementById("marks-modal");
+        const closeBtn = document.getElementById("marks-modal-close-btn");
+        const cancelBtn = document.getElementById("btn-marks-cancel");
+        const saveBtn = document.getElementById("btn-save-marks");
+
+        const loadingDiv = document.getElementById("students-loading");
+        const errorDiv = document.getElementById("students-error");
+        const tableContainer = document.getElementById("students-table-container");
+        const tbody = document.getElementById("students-table-body");
+
+        let currentStudentId = null;
+        let currentExamId = null;
+        let lastFocusedElement = null;
+
+        // Fetch students on page load
+        loadStudents();
+
+        async function loadStudents() {
+            loadingDiv.style.display = "block";
+            errorDiv.style.display = "none";
+            tableContainer.style.display = "none";
+
+            try {
+                const response = await fetch("/api/teacher/students", {
+                    headers: { "Accept": "application/json" }
+                });
+
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.error?.message || "Failed to load students.");
+                }
+
+                const data = await response.json();
+                currentExamId = data.exam.id;
+                renderStudents(data.students);
+            } catch (err) {
+                loadingDiv.style.display = "none";
+                errorDiv.textContent = err.message;
+                errorDiv.style.display = "block";
+            }
+        }
+
+        function renderStudents(students) {
+            loadingDiv.style.display = "none";
+            tableContainer.style.display = "block";
+            tbody.innerHTML = "";
+
+            if (students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--muted-color); padding: 2rem;">No students assigned to your account.</td></tr>`;
+                return;
+            }
+
+            students.forEach(s => {
+                const tr = document.createElement("tr");
+
+                let statusBadge = "";
+                if (s.result_status === "PASS") {
+                    statusBadge = `<span class="badge badge-pass">PASS</span>`;
+                } else if (s.result_status === "FAIL") {
+                    statusBadge = `<span class="badge badge-fail">FAIL</span>`;
+                } else {
+                    statusBadge = `<span class="badge badge-incomplete">INCOMPLETE</span>`;
+                }
+
+                const subjectPills = s.assigned_subjects.map(c => `<span class="badge-pill">${c}</span>`).join(" ");
+
+                tr.innerHTML = `
+                    <td><strong>${s.student_code}</strong></td>
+                    <td>${s.full_name}</td>
+                    <td>${s.section}</td>
+                    <td>${s.roll_number}</td>
+                    <td>${subjectPills}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn-sm btn-edit-student" data-id="${s.id}" data-name="${s.full_name}" data-code="${s.student_code}">
+                            Enter Marks
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.querySelectorAll(".btn-edit-student").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    const id = parseInt(this.getAttribute("data-id"));
+                    openMarksModal(id, this);
+                });
+            });
+        }
+
+        async function openMarksModal(studentId, triggerEl) {
+            currentStudentId = studentId;
+            lastFocusedElement = triggerEl || document.activeElement;
+
+            backdrop.classList.add("is-active");
+            backdrop.setAttribute("aria-hidden", "false");
+            modal.focus();
+
+            document.getElementById("marks-modal-loading").style.display = "block";
+            document.getElementById("marks-modal-error").style.display = "none";
+            document.getElementById("marks-modal-success").style.display = "none";
+            document.getElementById("marks-modal-content").style.display = "none";
+
+            try {
+                const response = await fetch(`/api/teacher/students/${studentId}/marks?exam_id=${currentExamId}`, {
+                    headers: { "Accept": "application/json" }
+                });
+
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.error?.message || "Failed to load marks.");
+                }
+
+                const data = await response.json();
+                renderMarksModal(data);
+            } catch (err) {
+                document.getElementById("marks-modal-loading").style.display = "none";
+                const errDiv = document.getElementById("marks-modal-error");
+                errDiv.textContent = err.message;
+                errDiv.style.display = "block";
+            }
+        }
+
+        function renderMarksModal(data) {
+            document.getElementById("marks-modal-loading").style.display = "none";
+            document.getElementById("marks-modal-content").style.display = "block";
+
+            document.getElementById("marks-modal-subtitle").textContent =
+                `Student: ${data.student.full_name} (${data.student.student_code}) — Exam: ${data.exam.name}`;
+
+            updateSummaryDisplay(data.summary);
+
+            const mBody = document.getElementById("marks-table-body");
+            mBody.innerHTML = "";
+
+            data.subjects.forEach(sub => {
+                const tr = document.createElement("tr");
+
+                const editable = sub.editable;
+                const inputHtml = editable
+                    ? `<input type="text" class="input-mark" id="input-sub-${sub.subject_id}" data-sub-id="${sub.subject_id}" data-sub-code="${sub.code}" value="${sub.marks_obtained !== null ? sub.marks_obtained : ''}" placeholder="0 - ${sub.max_marks}">
+                       <span class="field-error-msg" id="error-sub-${sub.subject_id}"></span>`
+                    : `<input type="text" class="input-mark" value="${sub.marks_obtained !== null ? sub.marks_obtained : ''}" disabled title="Not assigned to you">`;
+
+                const permLabel = editable
+                    ? `<span style="color: var(--success-color); font-weight: 600; font-size: 0.8rem;">Assigned (Editable)</span>`
+                    : `<span style="color: var(--muted-color); font-size: 0.8rem;">Read-only</span>`;
+
+                tr.innerHTML = `
+                    <td><strong>${sub.name}</strong> <span class="badge-pill">${sub.code}</span></td>
+                    <td>${sub.max_marks}</td>
+                    <td>${sub.pass_marks}</td>
+                    <td>${inputHtml}</td>
+                    <td>${permLabel}</td>
+                `;
+                mBody.appendChild(tr);
+            });
+        }
+
+        function updateSummaryDisplay(summary) {
+            document.getElementById("modal-res-total").textContent =
+                summary.total_obtained !== null ? `${summary.total_obtained} / ${summary.total_max}` : `— / ${summary.total_max}`;
+            document.getElementById("modal-res-percentage").textContent =
+                summary.percentage !== null ? `${summary.percentage}%` : "—";
+            document.getElementById("modal-res-grade").textContent = summary.grade || "—";
+
+            const statusEl = document.getElementById("modal-res-status");
+            statusEl.textContent = summary.status;
+            if (summary.status === "PASS") {
+                statusEl.innerHTML = `<span class="badge badge-pass">PASS</span>`;
+            } else if (summary.status === "FAIL") {
+                statusEl.innerHTML = `<span class="badge badge-fail">FAIL</span>`;
+            } else {
+                statusEl.innerHTML = `<span class="badge badge-incomplete">INCOMPLETE</span>`;
+            }
+        }
+
+        function closeMarksModal() {
+            backdrop.classList.remove("is-active");
+            backdrop.setAttribute("aria-hidden", "true");
+            if (lastFocusedElement) {
+                lastFocusedElement.focus();
+            }
+        }
+
+        closeBtn.addEventListener("click", closeMarksModal);
+        cancelBtn.addEventListener("click", closeMarksModal);
+
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && backdrop.classList.contains("is-active")) {
+                closeMarksModal();
+            }
+        });
+
+        backdrop.addEventListener("click", function (e) {
+            if (e.target === backdrop) {
+                closeMarksModal();
+            }
+        });
+
+        // Save Marks submission
+        saveBtn.addEventListener("click", async function () {
+            // Clear prior errors
+            document.getElementById("marks-modal-error").style.display = "none";
+            document.getElementById("marks-modal-success").style.display = "none";
+            document.querySelectorAll(".field-error-msg").forEach(el => el.textContent = "");
+
+            const inputs = document.querySelectorAll(".input-mark:not(:disabled)");
+            const marksPayload = [];
+
+            inputs.forEach(input => {
+                const subId = parseInt(input.getAttribute("data-sub-id"));
+                const rawVal = input.value.trim();
+                marksPayload.push({
+                    subject_id: subId,
+                    marks_obtained: rawVal === "" ? null : rawVal
+                });
+            });
+
+            saveBtn.disabled = true;
+            const originalBtnText = saveBtn.textContent;
+            saveBtn.textContent = "Saving...";
+
+            try {
+                const response = await fetch(`/api/teacher/students/${currentStudentId}/marks`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "X-CSRFToken": csrfToken
+                    },
+                    body: JSON.stringify({
+                        exam_id: currentExamId,
+                        marks: marksPayload
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    if (response.status === 422 && data.error?.details?.fields) {
+                        // Display field-specific errors
+                        const fields = data.error.details.fields;
+                        inputs.forEach(input => {
+                            const code = input.getAttribute("data-sub-code");
+                            const subId = input.getAttribute("data-sub-id");
+                            if (fields[code]) {
+                                document.getElementById(`error-sub-${subId}`).textContent = fields[code];
+                            }
+                        });
+                        throw new Error("Please correct the highlighted validation errors.");
+                    }
+                    throw new Error(data.error?.message || "Failed to save marks.");
+                }
+
+                // Success
+                const successDiv = document.getElementById("marks-modal-success");
+                successDiv.textContent = `Marks saved successfully! (${data.saved} subject(s) recorded with audit log).`;
+                successDiv.style.display = "block";
+
+                // Update summary in modal
+                if (data.summary) {
+                    updateSummaryDisplay(data.summary);
+                }
+
+                // Refresh main students list
+                loadStudents();
+            } catch (err) {
+                const errDiv = document.getElementById("marks-modal-error");
+                errDiv.textContent = err.message;
+                errDiv.style.display = "block";
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalBtnText;
+            }
+        });
+    })();
+    </script>
 </body>
 </html>
