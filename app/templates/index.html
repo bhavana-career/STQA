@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Student Result Management System (SRMS) — Demo Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-container">
+            <h1 class="portal-title">10th Standard Result Portal</h1>
+            <span class="badge demo-badge">Demonstration System — Academic Use Only</span>
+        </div>
+    </header>
+
+    <main class="container main-content">
+        <section class="hero-section">
+            <h2>Welcome to Student Result Management System</h2>
+            <p class="lead-text">
+                Fictional demonstration portal for the Software Testing and Quality Assurance (STQA) laboratory.
+                All student, teacher, and examination records are synthetic sample data.
+            </p>
+            <div class="card-grid">
+                <article class="portal-card">
+                    <h3>Student Portal</h3>
+                    <p>Check your 10th Standard examination results, grade breakdown, and subject performance.</p>
+                    <a href="{{ url_for('auth.student_login') if 'auth' in config.blueprints else '#' }}" class="btn btn-primary" id="student-login-link">Student Login</a>
+                </article>
+                <article class="portal-card">
+                    <h3>Teacher Portal</h3>
+                    <p>Enter, update, and submit subject marks for assigned students in your section.</p>
+                    <a href="{{ url_for('auth.teacher_login') if 'auth' in config.blueprints else '#' }}" class="btn btn-secondary" id="teacher-login-link">Teacher Login</a>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 SRMS Academic Lab Project. Fictional sample data only.</p>
+        </div>
+    </footer>
+</body>
+</html>

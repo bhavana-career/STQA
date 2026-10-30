@@ -1,0 +1,15 @@
+=== DEF-001 AFTER FIX EXECUTION EVIDENCE ===
+Command: pytest tests/unit/test_fault_demo.py -k test_def_001_corrected_implementation_passes -v
+Timestamp: 2026-10-30T13:38:22+05:30
+Result: PASSED
+
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.2.0, pluggy-1.7.0
+rootdir: C:\Users\bhava\Downloads\ST&QA
+configfile: pytest.ini
+plugins: cov-7.1.0, html-4.2.0, metadata-3.1.1
+collected 4 items / 3 deselected / 1 selected
+
+tests/unit/test_fault_demo.py::TestDefect001PercentageDenominator::test_def_001_corrected_implementation_passes PASSED [100%]
+
+======================= 1 passed, 3 deselected in 0.03s =======================

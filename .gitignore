@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Environment / secrets — never commit real values
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Test & coverage output (curated evidence lives in docs/evidence/)
+reports/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.pytest_cache/
+
+# Local databases / OS / IDE
+*.sqlite3
+*.db
+instance/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

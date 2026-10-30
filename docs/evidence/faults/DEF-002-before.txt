@@ -1,0 +1,29 @@
+=== DEF-002 BEFORE FIX EXECUTION EVIDENCE ===
+Command: pytest fault_injection/tests/test_failing_faults.py -k test_def_002
+Timestamp: 2026-10-30T13:38:04+05:30
+Result: FAILED
+
+________________ test_def_002_failing_on_faulty_grade_boundary ________________
+
+    @pytest.mark.fault_demo
+    def test_def_002_failing_on_faulty_grade_boundary():
+        """DEF-002 Before-Fix Test: Expects A1 for exact 90.00% lower bound.
+    
+        FAILS on faulty_grade_for_percentage_strict_greater because '>' causes demotion to A2.
+        """
+        pct = Decimal("90.00")
+        expected_grade = "A1"
+    
+        # This assertion fails because faulty function returns "A2"
+        actual = faulty_grade_for_percentage_strict_greater(pct)
+>       assert actual == expected_grade, (
+            f"DEF-002 Failure: Expected grade {expected_grade} for {pct}%, got {actual}"
+        )
+E       AssertionError: DEF-002 Failure: Expected grade A1 for 90.00%, got A2
+E       assert 'A2' == 'A1'
+E         
+E         - A1
+E         + A2
+
+fault_injection\tests\test_failing_faults.py:46: AssertionError
+============================== 1 failed in 0.12s ==============================

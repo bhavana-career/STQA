@@ -1,0 +1,23 @@
+# Local PostgreSQL for development and automated tests (NOT used in production).
+# Creates two databases: srms_dev and srms_test. Port 5433 avoids clashing with any local 5432.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: srms-postgres
+    environment:
+      POSTGRES_USER: srms
+      POSTGRES_PASSWORD: srms_local_pw   # local-only throwaway credential
+      POSTGRES_DB: srms_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - srms_pgdata:/var/lib/postgresql/data
+      - ./scripts/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U srms -d srms_dev"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  srms_pgdata:

@@ -1,0 +1,27 @@
+=== DEF-001 BEFORE FIX EXECUTION EVIDENCE ===
+Command: pytest fault_injection/tests/test_failing_faults.py -k test_def_001
+Timestamp: 2026-10-30T13:38:04+05:30
+Result: FAILED
+
+__________________ test_def_001_failing_on_faulty_percentage __________________
+
+    @pytest.mark.fault_demo
+    def test_def_001_failing_on_faulty_percentage():
+        """DEF-001 Before-Fix Test: Expects 63.04% for 145/230 marks.
+    
+        FAILS on faulty_percentage_fixed_denominator because it divides by 300.
+        """
+        obtained = Decimal("145")
+        subject_count = 3
+        expected_correct = Decimal("63.04")
+    
+        # This assertion fails because faulty function returns 48.33
+        actual = faulty_percentage_fixed_denominator(obtained, subject_count)
+>       assert actual == expected_correct, (
+            f"DEF-001 Failure: Expected {expected_correct}%, got {actual}%"
+        )
+E       AssertionError: DEF-001 Failure: Expected 63.04%, got 48.33%
+E       assert Decimal('48.33') == Decimal('63.04')
+
+fault_injection\tests\test_failing_faults.py:30: AssertionError
+============================== 1 failed in 0.12s ==============================
