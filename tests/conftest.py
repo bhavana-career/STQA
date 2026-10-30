@@ -166,6 +166,15 @@ def live_server(pg_test_db_url: str) -> Generator[str, None, None]:
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
 
+    # Wait until live test server is actively accepting TCP connections
+    start_time = time.time()
+    while time.time() - start_time < 5.0:
+        try:
+            with socket.create_connection(("127.0.0.1", port), timeout=0.2):
+                break
+        except OSError:
+            time.sleep(0.05)
+
     with test_app.app_context():
         _truncate_all_tables()
 
@@ -202,12 +211,13 @@ def selenium_driver(request) -> Generator[webdriver.Chrome, None, None]:
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-extensions")
     options.add_argument("--window-size=1280,900")
     options.add_argument("--log-level=3")
     options.add_experimental_option("excludeSwitches", ["enable-logging"])
 
     driver = webdriver.Chrome(options=options)
-    driver.set_page_load_timeout(15)
+    driver.set_page_load_timeout(30)
     driver.implicitly_wait(0)
 
     yield driver
