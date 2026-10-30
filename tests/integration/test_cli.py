@@ -344,3 +344,28 @@ class TestSetupProductionAccountsCli:
         assert res2.exit_code == 0
         assert "EXISTS" in res2.output
 
+    def test_setup_production_accounts_prompt_passwords(self, pg_runner, pg_app):
+        # Interactive prompt test with confirmation
+        res = pg_runner.invoke(
+            args=[
+                "setup-production-accounts",
+                "--prompt-passwords",
+                "--student-id", "4INI23IS099",
+                "--teacher-id", "TCH099",
+                "--teacher-name", "Science Teacher",
+                "--roll", "99",
+            ],
+            input="TeacherSecure123!\nTeacherSecure123!\nStudentSecure123!\nStudentSecure123!\n",
+        )
+        assert res.exit_code == 0
+        assert "NOT ECHOED TO LOGS" in res.output
+
+        with pg_app.app_context():
+            stu = db.session.scalar(select(User).where(User.login_id == "4INI23IS099"))
+            tch = db.session.scalar(select(User).where(User.login_id == "TCH099"))
+            assert stu is not None
+            assert stu.check_password("StudentSecure123!") is True
+            assert tch is not None
+            assert tch.check_password("TeacherSecure123!") is True
+
+

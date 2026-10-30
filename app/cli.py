@@ -369,8 +369,7 @@ def register_cli(app: Flask) -> None:
     @click.option("--section", default="A", help="Student section")
     @click.option("--academic-year", default="2025-26", help="Academic year")
     @click.option("--roll", type=int, default=36, help="Student roll number")
-    @click.option("--student-password", default=None, help="Explicit password for student")
-    @click.option("--teacher-password", default=None, help="Explicit password for teacher")
+    @click.option("--prompt-passwords", is_flag=True, help="Interactively enter passwords using hidden prompt with confirmation (getpass)")
     def setup_prod_accounts_cmd(
         student_id: str,
         teacher_id: str,
@@ -379,11 +378,41 @@ def register_cli(app: Flask) -> None:
         section: str,
         academic_year: str,
         roll: int,
-        student_password: str | None,
-        teacher_password: str | None,
+        prompt_passwords: bool,
     ) -> None:
         """Idempotently set up required production student and teacher accounts."""
+        from .services.password_policy import validate_password_strength
         from scripts.setup_production_accounts import provision_accounts
+
+        teacher_pw: str | None = None
+        student_pw: str | None = None
+
+        if prompt_passwords:
+            while True:
+                tpw = click.prompt(
+                    f"Enter password for Teacher ({teacher_id})",
+                    hide_input=True,
+                    confirmation_prompt=True,
+                )
+                valid, err = validate_password_strength(tpw, min_length=12)
+                if not valid:
+                    click.secho(f"Error: {err}", fg="red")
+                    continue
+                teacher_pw = tpw
+                break
+
+            while True:
+                spw = click.prompt(
+                    f"Enter password for Student ({student_id})",
+                    hide_input=True,
+                    confirmation_prompt=True,
+                )
+                valid, err = validate_password_strength(spw, min_length=12)
+                if not valid:
+                    click.secho(f"Error: {err}", fg="red")
+                    continue
+                student_pw = spw
+                break
 
         res = provision_accounts(
             student_id=student_id,
@@ -393,21 +422,15 @@ def register_cli(app: Flask) -> None:
             class_name=class_name,
             section_name=section,
             roll_number=roll,
-            student_password=student_password,
-            teacher_password=teacher_password,
+            student_password=student_pw,
+            teacher_password=teacher_pw,
         )
         click.secho("\n--- Production Accounts Setup ---", fg="cyan", bold=True)
         click.echo(f"Teacher ({teacher_id}): {res['teacher_status'].upper()}")
-        if res["teacher_password"]:
-            click.secho(f"  Generated Password: {res['teacher_password']}", fg="yellow")
-        else:
-            click.echo("  Password: (Already exists, existing password unchanged)")
+        click.echo("  Password status: [CONFIGURED SECURELY — NOT ECHOED TO LOGS]")
 
         click.echo(f"Student ({student_id}): {res['student_status'].upper()}")
-        if res["student_password"]:
-            click.secho(f"  Generated Password: {res['student_password']}", fg="yellow")
-        else:
-            click.echo("  Password: (Already exists, existing password unchanged)")
+        click.echo("  Password status: [CONFIGURED SECURELY — NOT ECHOED TO LOGS]")
         click.secho("Verification: SUCCESS (Linked to Mathematics in 10th Standard Section A)\n", fg="green")
 
 

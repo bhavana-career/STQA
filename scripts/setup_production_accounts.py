@@ -243,14 +243,30 @@ def provision_accounts(
     return results
 
 
+def _prompt_password_secure(label: str) -> str:
+    """Prompt for a password using hidden input with confirmation and policy check."""
+    import getpass
+
+    while True:
+        p1 = getpass.getpass(f"Enter password for {label}: ")
+        p2 = getpass.getpass(f"Confirm password for {label}: ")
+        if p1 != p2:
+            print("Error: Passwords do not match. Please try again.", file=sys.stderr)
+            continue
+        valid, err = validate_password_strength(p1, min_length=12)
+        if not valid:
+            print(f"Error: {err} Please try again.", file=sys.stderr)
+            continue
+        return p1
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Provision production SRMS accounts safely.")
     parser.add_argument("--database-url", default=None, help="Target PostgreSQL database URL (or use DATABASE_URL env var)")
     parser.add_argument("--student-id", default="4INI23IS036", help="Student USN/Login ID")
     parser.add_argument("--teacher-id", default="TCH001", help="Teacher Login ID")
     parser.add_argument("--teacher-name", default="Mathematics Teacher", help="Teacher display name")
-    parser.add_argument("--student-password", default=None, help="Explicit password for student")
-    parser.add_argument("--teacher-password", default=None, help="Explicit password for teacher")
+    parser.add_argument("--prompt", action="store_true", help="Prompt interactively for passwords using secure hidden input (getpass)")
     args = parser.parse_args()
 
     db_url = args.database_url or os.environ.get("DATABASE_URL")
@@ -258,29 +274,28 @@ def main() -> None:
         print("[!] No --database-url provided and DATABASE_URL is not set.", file=sys.stderr)
         print("    Running against local environment database...", file=sys.stderr)
 
+    student_pw: str | None = None
+    teacher_pw: str | None = None
+
+    if args.prompt:
+        teacher_pw = _prompt_password_secure(f"Teacher ({args.teacher_id})")
+        student_pw = _prompt_password_secure(f"Student ({args.student_id})")
+
     print("Checking and provisioning accounts...")
     res = provision_accounts(
         database_url=db_url,
         student_id=args.student_id,
         teacher_id=args.teacher_id,
         teacher_name=args.teacher_name,
-        student_password=args.student_password,
-        teacher_password=args.teacher_password,
+        student_password=student_pw,
+        teacher_password=teacher_pw,
     )
 
     print("\n================ Account Status ================")
     print(f"Teacher Account ({args.teacher_id}): {res['teacher_status'].upper()}")
-    if res["teacher_password"]:
-        print(f"  Generated Secure Password: {res['teacher_password']}")
-    else:
-        print("  Password: (Account already exists — existing password retained)")
-
-    print(f"\nStudent Account ({args.student_id}): {res['student_status'].upper()}")
-    if res["student_password"]:
-        print(f"  Generated Secure Password: {res['student_password']}")
-    else:
-        print("  Password: (Account already exists — existing password retained)")
-
+    print("  Password status: Securely configured (unprinted for security)")
+    print(f"Student Account ({args.student_id}): {res['student_status'].upper()}")
+    print("  Password status: Securely configured (unprinted for security)")
     print("\nSubject & Class Assignment: COMPLETED (Mathematics / 10th Standard Section A)")
     print("Verification: PASSED (Roles and accounts verified)")
     print("================================================\n")
