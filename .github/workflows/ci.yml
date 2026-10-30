@@ -44,6 +44,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -68,7 +70,27 @@ jobs:
           echo "Running flake8 syntax and undefined name checks..."
           flake8 app tests academic --select=E9,F63,F7,F82 --show-source --statistics
 
-      - name: Secret Detection & Security Hygiene
+      - name: Install Pinned Gitleaks Scanner
+        run: |
+          GITLEAKS_VERSION="8.24.0"
+          echo "Installing Gitleaks v${GITLEAKS_VERSION}..."
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | sudo tar -xz -C /usr/local/bin gitleaks
+          gitleaks version
+
+      - name: Gitleaks Secret Detection (Repository & History)
+        run: |
+          mkdir -p reports
+          echo "Scanning repository contents and full Git history with Gitleaks (redacted output)..."
+          gitleaks detect \
+            --source=. \
+            --config=.gitleaks.toml \
+            --log-opts="--all" \
+            --verbose \
+            --redact \
+            --report-format=json \
+            --report-path=reports/gitleaks-report.json
+
+      - name: Repository Hygiene Verification
         run: |
           echo "Verifying no .env files are tracked in Git..."
           if git ls-files --error-unmatch .env 2>/dev/null; then
@@ -82,13 +104,7 @@ jobs:
             echo "SECURITY VIOLATION: Private keys or certificates tracked in Git: $KEY_FILES"
             exit 1
           fi
-
-          echo "Verifying absence of unencrypted private key headers..."
-          if git grep -E "BEGIN (RSA|EC|DSA|OPENSSH) PRIVATE KEY" -- ':!*.md' ':!tests/*' 2>/dev/null; then
-            echo "SECURITY VIOLATION: Unencrypted private key found in tracked files!"
-            exit 1
-          fi
-          echo "Repository security hygiene check passed."
+          echo "Repository security hygiene checks passed."
 
       - name: Setup PostgreSQL Test Database & Apply Migrations
         run: |
@@ -129,6 +145,7 @@ jobs:
           name: srms-ci-artifacts
           path: |
             reports/*.html
+            reports/*.json
             reports/coverage/
             reports/screenshots/
           retention-days: 14

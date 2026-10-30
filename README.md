@@ -170,9 +170,11 @@ Every pipeline run executes sequentially in a clean `ubuntu-latest` environment 
 2. **Code Quality & Linting:**
    - Bytecode compilation check across all modules (`python -m compileall app tests academic`).
    - Flake8 syntax error, undefined variable, and syntax checks (`flake8 app tests academic --select=E9,F63,F7,F82`).
-3. **Security Hygiene & Secret Scanning:**
-   - Ensures `.env` files are never tracked or committed.
-   - Enforces that no private keys (`*.pem`, `*.key`) or unencrypted private key headers exist in tracked files.
+3. **Automated Secret Scanning & Security Hygiene (Gitleaks):**
+   - Runs official pinned Gitleaks scanner (`v8.24.0`) across all repository files and the entire Git commit history (`--log-opts="--all"`).
+   - Enforces automatic secret value redaction (`--redact`) so sensitive values are never leaked in logs.
+   - Configures `.gitleaks.toml` exclusions for virtual environments (`.venv/`), test reports (`reports/`), and caches.
+   - Verifies that `.env`, private keys (`*.pem`, `*.key`), and certificates are strictly untracked.
 4. **PostgreSQL Service Container & Database Migrations:**
    - Provisions an isolated `postgres:16-alpine` service container with automated health checks on port 5432.
    - Creates the dedicated, isolated `srms_test` database via `psql`.

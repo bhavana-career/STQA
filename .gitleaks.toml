@@ -1,0 +1,18 @@
+# Gitleaks Configuration for Student Result Management System (SRMS)
+# Extends Gitleaks default ruleset with exclusions for build, virtualenv, and test output artifacts.
+
+title = "SRMS Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Exclusions for non-source artifacts, virtual environments, test reports, and demo fixtures"
+paths = [
+  '''^\.venv/''',
+  '''^venv/''',
+  '''^reports/''',
+  '''^htmlcov/''',
+  '''^\.pytest_cache/''',
+  '''^\.git/''',
+]
