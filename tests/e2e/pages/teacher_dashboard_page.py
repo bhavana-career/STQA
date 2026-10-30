@@ -69,4 +69,4 @@ class TeacherDashboardPage(BasePage):
     def logout(self) -> None:
         """Click logout button to terminate session."""
         self.click(self.LOGOUT_BTN)
-        self.wait_for_url_contains("/")
+        self.wait.until(lambda d: "/teacher" not in d.current_url)
