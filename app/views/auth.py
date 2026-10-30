@@ -30,6 +30,7 @@ from ..auth import _wants_json, is_safe_url
 from ..extensions import db
 from ..models import User
 from ..services.captcha import verify_captcha
+from ..services.password_policy import validate_password_strength
 
 bp = Blueprint("auth", __name__)
 
@@ -235,3 +236,67 @@ def logout():
         return jsonify({"status": "ok", "message": "Logged out successfully"}), 200
 
     return redirect(url_for("main.index"))
+
+
+@bp.post("/change-password")
+@login_required
+def change_password():
+    """Secure password change for authenticated students and teachers."""
+    payload = request.get_json(silent=True) or {} if request.is_json else {}
+    current_pw = request.form.get("current_password") or payload.get("current_password") or ""
+    new_pw = request.form.get("new_password") or payload.get("new_password") or ""
+    confirm_pw = request.form.get("confirm_password") or payload.get("confirm_password") or ""
+
+    if not current_pw or not new_pw or not confirm_pw:
+        msg = "All password fields are required."
+        if _wants_json():
+            return jsonify({"error": {"code": "missing_fields", "message": msg}}), 400
+        flash(msg, "error")
+        return redirect(_get_dashboard_url(current_user.role))
+
+    if not current_user.check_password(current_pw):
+        msg = "Current password is incorrect."
+        if _wants_json():
+            return jsonify({"error": {"code": "invalid_current_password", "message": msg}}), 400
+        flash(msg, "error")
+        return redirect(_get_dashboard_url(current_user.role))
+
+    if new_pw != confirm_pw:
+        msg = "New password and confirmation do not match."
+        if _wants_json():
+            return jsonify({"error": {"code": "password_mismatch", "message": msg}}), 400
+        flash(msg, "error")
+        return redirect(_get_dashboard_url(current_user.role))
+
+    if current_pw == new_pw:
+        msg = "New password cannot be identical to current password."
+        if _wants_json():
+            return jsonify({"error": {"code": "same_password", "message": msg}}), 400
+        flash(msg, "error")
+        return redirect(_get_dashboard_url(current_user.role))
+
+    valid, err_msg = validate_password_strength(new_pw, min_length=12)
+    if not valid:
+        if _wants_json():
+            return jsonify({"error": {"code": "weak_password", "message": err_msg}}), 400
+        flash(err_msg or "Password does not meet complexity requirements.", "error")
+        return redirect(_get_dashboard_url(current_user.role))
+
+    # Update password and invalidate other sessions
+    current_user.set_password(new_pw)
+    current_user.increment_session_version()
+    # Keep current session valid
+    session["session_version"] = current_user.session_version
+    db.session.commit()
+
+    success_msg = "Password changed successfully."
+    if _wants_json():
+        return jsonify({"status": "ok", "message": success_msg}), 200
+
+    flash(success_msg, "success")
+    return redirect(_get_dashboard_url(current_user.role))
+
+
+def _get_dashboard_url(role: str) -> str:
+    return url_for("student.dashboard") if role == "student" else url_for("teacher.dashboard")
+

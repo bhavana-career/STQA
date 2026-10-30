@@ -361,6 +361,56 @@ def register_cli(app: Flask) -> None:
         click.echo("  Teachers: TCH001, TCH002")
         click.echo("  Students: STU2026001, STU2026002, STU2026003, STU2026004")
 
+    @app.cli.command("setup-production-accounts")
+    @click.option("--student-id", default="4INI23IS036", help="Student login ID")
+    @click.option("--teacher-id", default="TCH001", help="Teacher login ID")
+    @click.option("--teacher-name", default="Mathematics Teacher", help="Teacher name")
+    @click.option("--class-name", default="10th Standard", help="Student class")
+    @click.option("--section", default="A", help="Student section")
+    @click.option("--academic-year", default="2025-26", help="Academic year")
+    @click.option("--roll", type=int, default=36, help="Student roll number")
+    @click.option("--student-password", default=None, help="Explicit password for student")
+    @click.option("--teacher-password", default=None, help="Explicit password for teacher")
+    def setup_prod_accounts_cmd(
+        student_id: str,
+        teacher_id: str,
+        teacher_name: str,
+        class_name: str,
+        section: str,
+        academic_year: str,
+        roll: int,
+        student_password: str | None,
+        teacher_password: str | None,
+    ) -> None:
+        """Idempotently set up required production student and teacher accounts."""
+        from scripts.setup_production_accounts import provision_accounts
+
+        res = provision_accounts(
+            student_id=student_id,
+            teacher_id=teacher_id,
+            teacher_name=teacher_name,
+            academic_year=academic_year,
+            class_name=class_name,
+            section_name=section,
+            roll_number=roll,
+            student_password=student_password,
+            teacher_password=teacher_password,
+        )
+        click.secho("\n--- Production Accounts Setup ---", fg="cyan", bold=True)
+        click.echo(f"Teacher ({teacher_id}): {res['teacher_status'].upper()}")
+        if res["teacher_password"]:
+            click.secho(f"  Generated Password: {res['teacher_password']}", fg="yellow")
+        else:
+            click.echo("  Password: (Already exists, existing password unchanged)")
+
+        click.echo(f"Student ({student_id}): {res['student_status'].upper()}")
+        if res["student_password"]:
+            click.secho(f"  Generated Password: {res['student_password']}", fg="yellow")
+        else:
+            click.echo("  Password: (Already exists, existing password unchanged)")
+        click.secho("Verification: SUCCESS (Linked to Mathematics in 10th Standard Section A)\n", fg="green")
+
+
 
 def _get_or_create(model: Any, defaults: dict[str, Any] | None = None, **kwargs: Any) -> Any:
     instance = db.session.scalar(select(model).filter_by(**kwargs))

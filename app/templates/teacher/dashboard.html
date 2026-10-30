@@ -44,6 +44,7 @@
             </div>
             <div class="header-user-info" style="display: flex; align-items: center; gap: 1rem;">
                 <span>Logged in as: <strong>{{ current_user.login_id }}</strong></span>
+                <button type="button" class="btn btn-outline" id="btn-open-change-password" style="padding: 0.35rem 0.75rem;">Change Password</button>
                 <form method="POST" action="{{ url_for('auth.logout') }}" style="display: inline;">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <button type="submit" class="btn btn-outline" id="btn-logout" style="padding: 0.35rem 0.75rem;">Logout</button>
@@ -181,6 +182,44 @@
         </div>
     </div>
 
+    <!-- Change Password Modal -->
+    <div class="modal-backdrop" id="change-password-backdrop" role="dialog" aria-modal="true" aria-labelledby="change-password-title" aria-hidden="true">
+        <div class="modal-dialog" id="change-password-modal" tabindex="-1" style="max-width: 480px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="change-password-title">Change Password</h3>
+                <button type="button" class="modal-close" id="change-password-close-btn" aria-label="Close dialog">&times;</button>
+            </div>
+            <form id="form-change-password">
+                <div class="modal-body">
+                    <div id="change-password-error" class="alert alert-error" style="display: none; margin-bottom: 1rem;" role="alert"></div>
+                    <div id="change-password-success" class="alert alert-success" style="display: none; margin-bottom: 1rem;" role="alert"></div>
+
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="input-current-password" style="display: block; font-weight: 600; margin-bottom: 0.35rem;">Current Password</label>
+                        <input type="password" id="input-current-password" class="form-control" required autocomplete="current-password" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="input-new-password" style="display: block; font-weight: 600; margin-bottom: 0.35rem;">New Password</label>
+                        <input type="password" id="input-new-password" class="form-control" required autocomplete="new-password" minlength="12" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                        <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.25rem;">
+                            Must be at least 12 characters and include uppercase, lowercase, numbers, and special characters.
+                        </small>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0.5rem;">
+                        <label for="input-confirm-password" style="display: block; font-weight: 600; margin-bottom: 0.35rem;">Confirm New Password</label>
+                        <input type="password" id="input-confirm-password" class="form-control" required autocomplete="new-password" minlength="12" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="btn-cancel-change-password">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btn-submit-change-password">Change Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <footer class="site-footer" role="contentinfo">
         <div class="container">
             <p>&copy; 2026 SRMS Academic Lab Project. Fictional sample data only.</p>
@@ -188,5 +227,6 @@
     </footer>
 
     <script src="{{ url_for('static', filename='js/teacher_dashboard.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/password_change.js') }}"></script>
 </body>
 </html>

@@ -302,3 +302,45 @@ class TestSeedDemoCli:
             assert "strictly forbidden in production" in result.output
         finally:
             pg_app.config["APP_ENV"] = orig_env
+
+
+@pytest.mark.integration
+class TestSetupProductionAccountsCli:
+    """Tests for setup-production-accounts CLI command and provisioning script."""
+
+    def test_setup_production_accounts_creates_and_is_idempotent(self, pg_runner, pg_app):
+        # 1. First run creates missing accounts
+        res1 = pg_runner.invoke(
+            args=[
+                "setup-production-accounts",
+                "--student-id", "4INI23IS036",
+                "--teacher-id", "TCH001",
+                "--teacher-name", "Mathematics Teacher",
+                "--class-name", "10th Standard",
+                "--section", "A",
+                "--roll", "36",
+            ]
+        )
+        assert res1.exit_code == 0
+        assert "Production Accounts Setup" in res1.output
+        assert "Linked to Mathematics" in res1.output
+
+        with pg_app.app_context():
+            stu = db.session.scalar(select(User).where(User.login_id == "4INI23IS036"))
+            tch = db.session.scalar(select(User).where(User.login_id == "TCH001"))
+            assert stu is not None
+            assert stu.role == "student"
+            assert tch is not None
+            assert tch.role == "teacher"
+
+        # 2. Second run is idempotent
+        res2 = pg_runner.invoke(
+            args=[
+                "setup-production-accounts",
+                "--student-id", "4INI23IS036",
+                "--teacher-id", "TCH001",
+            ]
+        )
+        assert res2.exit_code == 0
+        assert "EXISTS" in res2.output
+
