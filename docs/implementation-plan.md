@@ -29,8 +29,8 @@
 | M5 | Student & teacher features | Result API + dashboard + modal; teacher list/editor + PUT API with atomic save & audit | TC-AUTHZ-*, TC-MARK-*, TC-CALC-14/15, TC-DB-* pass (211 tests pass, 88% coverage) | **COMPLETED & APPROVED** |
 | M6 | UI polish & accessibility | Responsive CSS, loading/error states, keyboard modal, headless Selenium setup & smoke suite | 10 Selenium E2E smoke tests pass; 224 total tests pass with 90% branch/stmt coverage | **COMPLETED & APPROVED** |
 | M7 | Selenium E2E | Page Object Model architecture (`tests/e2e/pages/`), student/teacher complete journeys, boundary/negative suites, audit verification | 22 Selenium E2E tests pass in headless Chrome; 236 total suite tests pass with 90% branch/stmt coverage | **COMPLETED & APPROVED** |
-| M8 | Academic exercises + fault injection | `academic/`, `fault_injection/`, `docs/defects.md` with real before/after outputs, `docs/academic/` (Ex 1–10) | 51 academic unit tests pass; 289 total tests pass with 90% branch/stmt coverage; DEF-001, 002, 006 documented & closed | **COMPLETED** (Ready for Review) |
-| M9 | CI | `.github/workflows/ci.yml`: unit → integration (Postgres service) → e2e (headless Chrome) → coverage/report artifacts; gitleaks | Green run on GitHub (link recorded) |
+| M8 | Academic exercises + fault injection | `academic/`, `fault_injection/`, `docs/defects.md` with real before/after outputs, `docs/academic/` (Ex 1–10) | 51 academic unit tests pass; 289 total tests pass with 90% branch/stmt coverage; DEF-001, 002, 006 documented & closed | **COMPLETED & APPROVED** |
+| M9 | CI | `.github/workflows/ci.yml`: unit → integration (Postgres service) → e2e (headless Chrome) → coverage/report artifacts | Workflow validated; lint, secret check, migrations, 289 tests, 90% coverage threshold, artifact upload verified | **COMPLETED** (Ready for Review) |
 | M10 | Deployment | Render + Neon + real Turnstile keys; migrations; manual demo seeding | Public URL smoke checklist executed and recorded |
 | M11 | Handover | README, deployment guide, evidence folder, final test/coverage results | Fresh-clone reproduction of the documented commands |
 

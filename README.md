@@ -1,5 +1,7 @@
 # Student Result Management System (SRMS) — STQA Lab
 
+[![CI](https://github.com/bhavana-career/STQA/actions/workflows/ci.yml/badge.svg)](https://github.com/bhavana-career/STQA/actions/workflows/ci.yml)
+
 A robust, enterprise-grade, publicly deployable Student Result Management System for 10th Standard secondary school results, developed for the Software Testing and Quality Assurance (STQA) academic laboratory.
 
 ## Tech Stack
@@ -145,6 +147,76 @@ pytest fault_injection/tests/ -v
 *(Demonstrates deliberate before-fix defect failures for DEF-001, DEF-002, and DEF-006, isolated outside production logic).*
 - Before/after defect logs: `docs/evidence/faults/`
 - Defect tracking and lifecycle: `docs/defects.md`
+
+---
+
+## Continuous Integration (CI) with GitHub Actions
+
+The repository includes a comprehensive, multi-stage automated Continuous Integration pipeline defined in [`.github/workflows/ci.yml`](file:///c:/Users/bhava/Downloads/ST&QA/.github/workflows/ci.yml).
+
+### 1. Trigger Behavior
+- **Push:** Automatically triggers on every push to the `main` branch.
+- **Pull Request:** Automatically triggers on all pull requests targeting the `main` branch.
+- **Manual Execution:** Can be triggered manually on demand via GitHub Actions `workflow_dispatch`.
+
+### 2. CI Verification Stages
+Every pipeline run executes sequentially in a clean `ubuntu-latest` environment with Python 3.11:
+
+1. **Environment Setup & Dependency Verification:**
+   - Checks out the repository using `actions/checkout@v4`.
+   - Sets up Python 3.11 with pip caching using `actions/setup-python@v5`.
+   - Installs pinned production and development dependencies (`requirements-dev.txt`).
+   - Runs `pip check` to verify zero conflicting dependencies.
+2. **Code Quality & Linting:**
+   - Bytecode compilation check across all modules (`python -m compileall app tests academic`).
+   - Flake8 syntax error, undefined variable, and syntax checks (`flake8 app tests academic --select=E9,F63,F7,F82`).
+3. **Security Hygiene & Secret Scanning:**
+   - Ensures `.env` files are never tracked or committed.
+   - Enforces that no private keys (`*.pem`, `*.key`) or unencrypted private key headers exist in tracked files.
+4. **PostgreSQL Service Container & Database Migrations:**
+   - Provisions an isolated `postgres:16-alpine` service container with automated health checks on port 5432.
+   - Creates the dedicated, isolated `srms_test` database via `psql`.
+   - Applies all Alembic schema migrations via `flask db upgrade`.
+   - Verifies schema health and table counts via `flask db-status`.
+5. **Test Execution & Quality Gates:**
+   - **Unit & Academic Tests:** Executes 173 fast in-memory unit and academic syllabus tests with pytest.
+   - **Integration Tests:** Executes 94 live PostgreSQL integration tests verifying models, security, and CLI commands.
+   - **Headless Chrome E2E Tests:** Executes 22 browser automation tests using Selenium WebDriver and Page Object Model.
+6. **Code Coverage Enforcement:**
+   - Combines statement and branch coverage across all test tiers (`--cov-append`).
+   - Enforces the baseline **90% coverage threshold** via `coverage report -m --fail-under=90`. Builds fail if coverage drops below 90%.
+   - Generates interactive HTML coverage reports (`reports/coverage/`).
+7. **Artifact Archival:**
+   - Automatically uploads HTML test reports, interactive coverage reports, and failure screenshots/logs via `actions/upload-artifact@v4` with a 14-day retention period (`if: always()`).
+
+### 3. How to Inspect CI Test Reports & Artifacts
+1. Navigate to the GitHub repository: `https://github.com/bhavana-career/STQA/actions`.
+2. Click on the desired workflow run (e.g., from the latest commit).
+3. Under the **Artifacts** section at the bottom of the summary page, download `srms-ci-artifacts.zip`.
+4. Extract the ZIP archive locally:
+   - Open `reports/coverage/index.html` in any browser to inspect line-by-line branch coverage.
+   - Open `reports/unit_test_report.html`, `reports/integration_test_report.html`, or `reports/e2e_test_report.html` to view test execution timelines and assertion details.
+   - Inspect `reports/screenshots/` for failure screenshots and browser console logs if any test failed.
+
+### 4. Reproducing CI Tests Locally (Windows PowerShell)
+
+Ensure Docker Desktop is running and PostgreSQL container is active (`docker compose up -d`):
+
+```powershell
+# 1. Bytecode compilation & linting
+.\.venv\Scripts\python -m compileall app tests academic
+.\.venv\Scripts\flake8 app tests academic --select=E9,F63,F7,F82 --show-source --statistics
+
+# 2. Database migrations check on local test database
+$env:DATABASE_URL = "postgresql+psycopg://srms:srms_local_pw@localhost:5433/srms_test"
+flask db upgrade
+flask db-status
+
+# 3. Run complete test suite matching CI (Unit, Integration, E2E & Academic)
+$env:DATABASE_URL = ""
+$env:TEST_DATABASE_URL = "postgresql+psycopg://srms:srms_local_pw@localhost:5433/srms_test"
+pytest -v --cov=app --cov-branch --cov-report=term-missing --cov-report=html:reports/coverage --cov-fail-under=90 --html=reports/m9_report.html --self-contained-html
+```
 
 ---
 

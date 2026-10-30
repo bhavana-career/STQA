@@ -1,0 +1,134 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Build, Lint, Test & Coverage
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: srms
+          POSTGRES_PASSWORD: srms_test_pw
+          POSTGRES_DB: srms_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      APP_ENV: testing
+      SECRET_KEY: ci-testing-secret-key-32-characters-minimum-guard!
+      TEST_DATABASE_URL: postgresql+psycopg://srms:srms_test_pw@localhost:5432/srms_test
+      DATABASE_URL: ""
+      CAPTCHA_MODE: mock
+      TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+      TURNSTILE_SECRET_KEY: 1x0000000000000000000000000000000AA
+      TURNSTILE_ALLOWED_HOSTNAMES: localhost,127.0.0.1
+      WTF_CSRF_ENABLED: "0"
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Verify Dependency Installation
+        run: |
+          pip check
+          python -c "import flask, sqlalchemy, psycopg, selenium, pytest; print('Core dependencies successfully verified.')"
+
+      - name: Code Quality & Linting
+        run: |
+          echo "Compiling all Python modules to bytecode..."
+          python -m compileall app tests academic
+          echo "Running flake8 syntax and undefined name checks..."
+          flake8 app tests academic --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Secret Detection & Security Hygiene
+        run: |
+          echo "Verifying no .env files are tracked in Git..."
+          if git ls-files --error-unmatch .env 2>/dev/null; then
+            echo "SECURITY VIOLATION: .env file is tracked in Git!"
+            exit 1
+          fi
+
+          echo "Verifying no private keys or certificates are tracked in Git..."
+          KEY_FILES=$(git ls-files '*.pem' '*.key' '*.pfx' '*.p12')
+          if [ -n "$KEY_FILES" ]; then
+            echo "SECURITY VIOLATION: Private keys or certificates tracked in Git: $KEY_FILES"
+            exit 1
+          fi
+
+          echo "Verifying absence of unencrypted private key headers..."
+          if git grep -E "BEGIN (RSA|EC|DSA|OPENSSH) PRIVATE KEY" -- ':!*.md' ':!tests/*' 2>/dev/null; then
+            echo "SECURITY VIOLATION: Unencrypted private key found in tracked files!"
+            exit 1
+          fi
+          echo "Repository security hygiene check passed."
+
+      - name: Setup PostgreSQL Test Database & Apply Migrations
+        run: |
+          if ! command -v psql &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y postgresql-client
+          fi
+          echo "Creating isolated srms_test database in PostgreSQL service..."
+          PGPASSWORD=srms_test_pw psql -h localhost -U srms -d srms_dev -c "CREATE DATABASE srms_test OWNER srms;" || true
+
+          echo "Applying Alembic database migrations to srms_test..."
+          DATABASE_URL="postgresql+psycopg://srms:srms_test_pw@localhost:5432/srms_test" flask db upgrade
+
+          echo "Verifying database connectivity and status..."
+          DATABASE_URL="postgresql+psycopg://srms:srms_test_pw@localhost:5432/srms_test" flask db-status
+
+      - name: Run Unit and Academic Tests
+        run: |
+          pytest tests/unit academic/tests -v --cov=app --cov-branch --html=reports/unit_test_report.html --self-contained-html
+
+      - name: Run PostgreSQL Integration Tests
+        run: |
+          pytest tests/integration -v --cov=app --cov-branch --cov-append --html=reports/integration_test_report.html --self-contained-html
+
+      - name: Run Selenium E2E Tests
+        run: |
+          pytest tests/e2e -v --cov=app --cov-branch --cov-append --html=reports/e2e_test_report.html --self-contained-html
+
+      - name: Coverage Verification & Report Generation
+        run: |
+          echo "Enforcing baseline 90% statement and branch coverage..."
+          coverage report -m --fail-under=90
+          coverage html -d reports/coverage
+
+      - name: Upload Test and Coverage Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: srms-ci-artifacts
+          path: |
+            reports/*.html
+            reports/coverage/
+            reports/screenshots/
+          retention-days: 14
