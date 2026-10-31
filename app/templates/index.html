@@ -18,10 +18,10 @@
 
     <main class="container main-content" id="main-content" role="main">
         <section class="hero-section" aria-labelledby="hero-title">
-            <h2 id="hero-title">Welcome to Student Result Management System</h2>
+            <span class="demo-badge" style="color: var(--primary-hover); background: var(--primary-light); border-color: var(--primary-border);">A considered academic record</span>
+            <h2 id="hero-title">Results you can read with confidence.</h2>
             <p class="lead-text">
-                Demonstration platform for Software Testing and Quality Assurance (STQA).
-                Featuring role-based access control, server-side grading verification, and an audit trail for mark updates.
+                A focused result portal for students and faculty. View verified marks, understand performance, and keep every update accountable.
             </p>
             <div class="card-grid">
                 <article class="portal-card system-card" aria-labelledby="card-student-title">
@@ -46,6 +46,12 @@
                     </div>
                     <a href="{{ url_for('auth.teacher_login') }}" class="btn btn-secondary btn-block" id="teacher-login-link">Teacher Login</a>
                 </article>
+            </div>
+            <div class="feature-strip" aria-label="Platform features">
+                <div class="feature-item"><strong>Secure access</strong>Role-based sign in</div>
+                <div class="feature-item"><strong>Verified calculations</strong>Server-side grading</div>
+                <div class="feature-item"><strong>Academic records</strong>Clear subject history</div>
+                <div class="feature-item"><strong>Auditable updates</strong>Accountable marks changes</div>
             </div>
         </section>
     </main>
