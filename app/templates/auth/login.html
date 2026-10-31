@@ -31,9 +31,9 @@
                 <h2 class="auth-card-title">{{ title }}</h2>
                 <p class="auth-card-subtitle">
                     {% if role == 'student' %}
-                    Enter your Student ID (e.g., <code>4INI23IS036</code> or <code>STU2026001</code>) and password.
+                    Enter your Student ID (e.g., STU2026001) and password.
                     {% else %}
-                    Enter your Teacher ID (e.g., <code>TCH001</code>) and password.
+                    Enter your Teacher ID (e.g., TCH001) and password.
                     {% endif %}
                 </p>
 
@@ -67,7 +67,7 @@
                                maxlength="32"
                                autocomplete="username"
                                value="{{ login_id or '' }}"
-                               placeholder="{% if role == 'student' %}4INI23IS036{% else %}TCH001{% endif %}"
+                               placeholder="{% if role == 'student' %}STU2026001{% else %}TCH001{% endif %}"
                                aria-describedby="login_id_help"/>
                         <small id="login_id_help" class="form-text">Case-insensitive identification code.</small>
                     </div>
@@ -103,7 +103,7 @@
                     </div>
 
                     <div class="form-actions" style="margin-top: 1.75rem;">
-                        <button type="submit" class="btn btn-primary btn-block" id="btn-submit-login">Sign In &rarr;</button>
+                        <button type="submit" class="btn btn-primary btn-block" id="btn-submit-login">Sign In</button>
                     </div>
                 </form>
 
