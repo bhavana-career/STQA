@@ -14,114 +14,157 @@
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <header class="site-header" role="banner">
         <div class="container header-container">
-            <h1 class="portal-title"><a href="{{ url_for('main.index') }}" style="color: inherit; text-decoration: none;">10th Standard Result Portal</a></h1>
-            <span class="badge demo-badge">Demonstration System — Academic Use Only</span>
+            <div class="brand-group">
+                <a href="{{ url_for('main.index') }}" class="brand">
+                    <span class="brand-mark">SRMS</span>
+                    <span class="brand-divider"></span>
+                    <h1 class="portal-title">10th Standard Result Portal</h1>
+                </a>
+            </div>
+            <span class="badge badge-neutral demo-badge">Demonstration System — Academic Use Only</span>
         </div>
     </header>
 
     <main class="container main-content" id="main-content" role="main">
-        <div class="auth-card-container">
-            <div class="card auth-card">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-                    <span class="badge" style="{% if role == 'student' %}background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;{% else %}background: #f0fdfa; color: #0f766e; border: 1px solid #99f6e4;{% endif %}">
-                        {% if role == 'student' %}Student Portal{% else %}Faculty Portal{% endif %}
-                    </span>
-                    <span class="demo-hint" style="font-size: 0.8rem; color: var(--muted-color);">Secure Login</span>
+        <div class="auth-layout">
+            <aside class="auth-aside">
+                <div class="eyebrow">
+                    {% if role == 'student' %}Candidate Access{% else %}Faculty Access{% endif %}
                 </div>
-                <h2 class="auth-card-title">{{ title }}</h2>
-                <p class="auth-card-subtitle">
+                <h2 class="auth-aside-title">
                     {% if role == 'student' %}
-                    Enter your Student ID (e.g., STU2026001) and password.
+                    Inspect verified academic results.
                     {% else %}
-                    Enter your Teacher ID (e.g., TCH001) and password.
+                    Record & evaluate student marks.
+                    {% endif %}
+                </h2>
+                <p class="auth-aside-lead">
+                    {% if role == 'student' %}
+                    Enter your assigned 10th standard roll number to retrieve verified statement of marks, grade classifications, and cumulative performance.
+                    {% else %}
+                    Enter your faculty credential to review assigned cohorts, maintain grade ledgers, and calculate class performance analytics.
                     {% endif %}
                 </p>
 
-                {% if error_message %}
-                <div class="alert alert-danger" role="alert" id="auth-error-alert" aria-live="polite">
-                    {{ error_message }}
-                </div>
-                {% endif %}
+                <ul class="auth-ledger" aria-label="Security commitments">
+                    <li>
+                        <span class="idx">01</span>
+                        <span>Argon2id password hashing with server-side authentication</span>
+                    </li>
+                    <li>
+                        <span class="idx">02</span>
+                        <span>Strict role-based isolation between student and faculty domains</span>
+                    </li>
+                    <li>
+                        <span class="idx">03</span>
+                        <span>Comprehensive audit trail logging for all grade transactions</span>
+                    </li>
+                </ul>
+            </aside>
 
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                  {% if messages %}
-                    {% for category, message in messages %}
-                      <div class="alert alert-{{ category }}" role="status">{{ message }}</div>
-                    {% endfor %}
-                  {% endif %}
-                {% endwith %}
-
-                <form method="POST" action="" class="auth-form" novalidate id="login-form">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    {% if next %}
-                    <input type="hidden" name="next" value="{{ next }}"/>
-                    {% endif %}
-
-                    <div class="form-group">
-                        <label for="login_id">Login ID</label>
-                        <input type="text"
-                               name="login_id"
-                               id="login_id"
-                               class="form-control"
-                               required
-                               maxlength="32"
-                               autocomplete="username"
-                               value="{{ login_id or '' }}"
-                               placeholder="{% if role == 'student' %}STU2026001{% else %}TCH001{% endif %}"
-                               aria-describedby="login_id_help"/>
-                        <small id="login_id_help" class="form-text">Case-insensitive identification code.</small>
+            <div class="auth-card-container">
+                <div class="card auth-card">
+                    <div class="auth-card-head">
+                        <span class="auth-role-tag">
+                            {% if role == 'student' %}Student Portal{% else %}Faculty Portal{% endif %}
+                        </span>
+                        <span class="demo-hint">Secure Login</span>
                     </div>
 
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password"
-                               name="password"
-                               id="password"
-                               class="form-control"
-                               required
-                               maxlength="128"
-                               autocomplete="current-password"
-                               placeholder="••••••••••••"/>
-                    </div>
-
-                    <div class="form-group captcha-group">
-                        <label id="captcha-label">Security Verification</label>
-                        {% if config.get('CAPTCHA_MODE') == 'turnstile' %}
-                        <div class="cf-turnstile"
-                             data-sitekey="{{ site_key }}"
-                             data-action="{{ action }}"
-                             data-theme="light"
-                             aria-labelledby="captcha-label"></div>
+                    <h2 class="auth-card-title">{{ title }}</h2>
+                    <p class="auth-card-subtitle">
+                        {% if role == 'student' %}
+                        Enter your Student ID (e.g., STU2026001) and password.
                         {% else %}
-                        <!-- Mock CAPTCHA for unit & automated test suites -->
-                        <div class="mock-captcha-box" style="padding: 10px 14px; border: 1px dashed var(--border-color); border-radius: 6px; background: #f8fafc; display: flex; align-items: center; justify-content: space-between;" aria-labelledby="captcha-label">
-                            <span style="font-size: 0.85rem; color: #475569;">[Automated Testing Security Verification Simulation]</span>
-                            <span class="badge" style="background: #e2e8f0; color: #334155;">Active</span>
-                            <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-response" value="XXXX.DUMMY.TOKEN.XXXX"/>
-                        </div>
+                        Enter your Teacher ID (e.g., TCH001) and password.
                         {% endif %}
-                    </div>
+                    </p>
 
-                    <div class="form-actions" style="margin-top: 1.75rem;">
-                        <button type="submit" class="btn btn-primary btn-block" id="btn-submit-login">Sign In</button>
+                    {% if error_message %}
+                    <div class="alert alert-danger" role="alert" id="auth-error-alert" aria-live="polite">
+                        {{ error_message }}
                     </div>
-                </form>
-
-                <div class="auth-card-footer" style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem;">
-                    {% if role == 'student' %}
-                    <a href="{{ url_for('auth.teacher_login') }}" style="color: var(--primary-color); font-weight: 500; text-decoration: none;">Teacher Portal Sign In &rarr;</a>
-                    {% else %}
-                    <a href="{{ url_for('auth.student_login') }}" style="color: var(--primary-color); font-weight: 500; text-decoration: none;">Student Portal Sign In &rarr;</a>
                     {% endif %}
-                    <span style="margin: 0 0.5rem; color: #cbd5e1;">|</span>
-                    <a href="{{ url_for('main.index') }}" style="color: var(--muted-color); text-decoration: none;">Back to Home</a>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                      {% if messages %}
+                        {% for category, message in messages %}
+                          <div class="alert alert-{{ category }}" role="status">{{ message }}</div>
+                        {% endfor %}
+                      {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" action="" class="auth-form" novalidate id="login-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        {% if next %}
+                        <input type="hidden" name="next" value="{{ next }}"/>
+                        {% endif %}
+
+                        <div class="form-group">
+                            <label for="login_id">Login ID</label>
+                            <input type="text"
+                                   name="login_id"
+                                   id="login_id"
+                                   class="form-control"
+                                   required
+                                   maxlength="32"
+                                   autocomplete="username"
+                                   value="{{ login_id or '' }}"
+                                   placeholder="{% if role == 'student' %}STU2026001{% else %}TCH001{% endif %}"
+                                   aria-describedby="login_id_help"/>
+                            <small id="login_id_help" class="form-text">Case-insensitive identification code.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password"
+                                   name="password"
+                                   id="password"
+                                   class="form-control"
+                                   required
+                                   maxlength="128"
+                                   autocomplete="current-password"
+                                   placeholder="••••••••••••"/>
+                        </div>
+
+                        <div class="form-group captcha-group">
+                            <label id="captcha-label">Security Verification</label>
+                            {% if config.get('CAPTCHA_MODE') == 'turnstile' %}
+                            <div class="cf-turnstile"
+                                 data-sitekey="{{ site_key }}"
+                                 data-action="{{ action }}"
+                                 data-theme="light"
+                                 aria-labelledby="captcha-label"></div>
+                            {% else %}
+                            <!-- Mock CAPTCHA for unit & automated test suites -->
+                            <div class="mock-captcha-box" aria-labelledby="captcha-label">
+                                <span>[Automated Testing Security Verification Simulation]</span>
+                                <span class="badge badge-neutral">Active</span>
+                                <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-response" value="XXXX.DUMMY.TOKEN.XXXX"/>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary btn-block" id="btn-submit-login">Sign In</button>
+                        </div>
+                    </form>
+
+                    <div class="auth-card-footer">
+                        {% if role == 'student' %}
+                        <a href="{{ url_for('auth.teacher_login') }}" class="text-link">Teacher Portal Sign In &rarr;</a>
+                        {% else %}
+                        <a href="{{ url_for('auth.student_login') }}" class="text-link">Student Portal Sign In &rarr;</a>
+                        {% endif %}
+                        <a href="{{ url_for('main.index') }}" class="muted">Back to Home</a>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
     <footer class="site-footer" role="contentinfo">
-        <div class="container">
+        <div class="container footer-content">
             <p>&copy; 2026 SRMS Academic Lab Project. Fictional sample data only.</p>
         </div>
     </footer>

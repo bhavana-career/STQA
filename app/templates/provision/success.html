@@ -10,64 +10,63 @@
 <body>
     <header class="site-header" role="banner">
         <div class="container header-container">
-            <h1 class="portal-title">SRMS System Administration</h1>
-            <span class="badge" style="background: #dcfce7; color: #166534;">Provisioning Success</span>
+            <div class="brand-group">
+                <a href="{{ url_for('main.index') }}" class="brand">
+                    <span class="brand-mark">SRMS</span>
+                    <span class="brand-divider"></span>
+                    <h1 class="portal-title">System Administration</h1>
+                </a>
+            </div>
+            <span class="badge badge-success">Provisioning Success</span>
         </div>
     </header>
 
-    <main class="container main-content" id="main-content" role="main" style="max-width: 600px; margin: 2rem auto;">
-        <div class="card" style="padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-top: 4px solid #16a34a;">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                <span style="font-size: 2rem; color: #16a34a;">✓</span>
-                <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color); margin: 0;">
-                    Accounts Provisioned Successfully
-                </h2>
-            </div>
+    <main class="container main-content" id="main-content" role="main">
+        <div class="admin-shell">
+            <div class="card admin-card admin-card--success">
+                <div class="admin-card-head">
+                    <span class="badge badge-success">Committed</span>
+                    <h2 class="admin-title">Accounts Provisioned Successfully</h2>
+                    <p class="admin-lead">
+                        The initial production accounts and subject curriculum have been atomically committed to your Neon PostgreSQL database.
+                    </p>
+                </div>
 
-            <p style="color: var(--text-color); font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.5rem;">
-                The initial production accounts and subject curriculum have been atomically committed to your Neon PostgreSQL database.
-            </p>
+                <div>
+                    <h3 class="admin-section-title">Provisioned Records</h3>
+                    <ul class="admin-record">
+                        <li><strong>General Teacher Account:</strong> <code>TCH001</code> (General Teacher)</li>
+                        <li><strong>5 Student Accounts:</strong>
+                            <ul>
+                                <li><code>4INI23IS036</code> (Bhavana M — Roll 36)</li>
+                                <li><code>4INI23IS001</code> (Aarav Sharma — Roll 1)</li>
+                                <li><code>4INI23IS002</code> (Diya Patel — Roll 2)</li>
+                                <li><code>4INI23IS003</code> (Karthik Rao — Roll 3)</li>
+                                <li><code>4INI23IS004</code> (Meera Nair — Roll 4)</li>
+                            </ul>
+                        </li>
+                        <li><strong>Class &amp; Section:</strong> 10th Standard — Section A (2025–26)</li>
+                        <li><strong>Subjects:</strong> English (<code>ENG</code>), Hindi (<code>HIN</code>), Mathematics (<code>MAT</code>), Science (<code>SCI</code>), Social Science (<code>SST</code>)</li>
+                        <li><strong>Teacher Authorization:</strong> Teacher <code>TCH001</code> assigned to all 5 students across all 5 subjects (25 assignments)</li>
+                        <li><strong>Seeded Data:</strong> Realistic marks out of 100 with full audit history</li>
+                        <li><strong>Database Lockout:</strong> <code>bootstrap_completed = true</code> recorded</li>
+                    </ul>
+                </div>
 
-            <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 6px; padding: 1.25rem; margin-bottom: 1.5rem;">
-                <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--primary-color);">
-                    Provisioned Records
-                </h3>
-                <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.9rem; line-height: 1.8;">
-                    <li><strong>General Teacher Account:</strong> <code>TCH001</code> (General Teacher)</li>
-                    <li><strong>5 Student Accounts:</strong>
-                        <ul style="padding-left: 1.25rem; margin: 0.25rem 0;">
-                            <li><code>4INI23IS036</code> (Bhavana M — Roll 36)</li>
-                            <li><code>4INI23IS001</code> (Aarav Sharma — Roll 1)</li>
-                            <li><code>4INI23IS002</code> (Diya Patel — Roll 2)</li>
-                            <li><code>4INI23IS003</code> (Karthik Rao — Roll 3)</li>
-                            <li><code>4INI23IS004</code> (Meera Nair — Roll 4)</li>
-                        </ul>
-                    </li>
-                    <li><strong>Class & Section:</strong> 10th Standard — Section A (2025-26)</li>
-                    <li><strong>Subjects:</strong> English (<code>ENG</code>), Hindi (<code>HIN</code>), Mathematics (<code>MAT</code>), Science (<code>SCI</code>), Social Science (<code>SST</code>)</li>
-                    <li><strong>Teacher Authorization:</strong> Teacher <code>TCH001</code> assigned to all 5 students across all 5 subjects (25 assignments)</li>
-                    <li><strong>Seeded Data:</strong> Realistic marks out of 100 with full audit history</li>
-                    <li><strong>Database Lockout:</strong> <code>bootstrap_completed = true</code> recorded</li>
-                </ul>
-            </div>
+                <div class="alert alert-warning">
+                    <strong>Next Step:</strong> The provisioning route is now permanently locked in the database. For security hygiene, navigate to your <strong>Render Dashboard &rarr; Environment</strong> and delete the <code>PROVISIONING_SECRET</code> environment variable.
+                </div>
 
-            <div class="alert" style="background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; font-size: 0.9rem;">
-                <strong>Next Step:</strong> The provisioning route is now permanently locked in the database. For security hygiene, go to your <strong>Render Dashboard &rarr; Environment</strong> and delete the <code>PROVISIONING_SECRET</code> variable.
-            </div>
-
-            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                <a href="{{ url_for('auth.student_login') }}" class="btn btn-primary" style="flex: 1; text-align: center; padding: 0.65rem;">
-                    Go to Student Portal
-                </a>
-                <a href="{{ url_for('auth.teacher_login') }}" class="btn btn-outline" style="flex: 1; text-align: center; padding: 0.65rem;">
-                    Go to Teacher Portal
-                </a>
+                <div class="admin-actions">
+                    <a href="{{ url_for('auth.student_login') }}" class="btn btn-primary">Go to Student Portal</a>
+                    <a href="{{ url_for('auth.teacher_login') }}" class="btn btn-outline">Go to Teacher Portal</a>
+                </div>
             </div>
         </div>
     </main>
 
-    <footer class="site-footer" role="contentinfo" style="margin-top: 3rem; text-align: center; color: var(--muted-color); font-size: 0.85rem;">
-        <div class="container">
+    <footer class="site-footer" role="contentinfo">
+        <div class="container footer-content">
             <p>&copy; 2026 SRMS Academic Lab Project. Production Administration.</p>
         </div>
     </footer>

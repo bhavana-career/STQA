@@ -11,54 +11,228 @@
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <header class="site-header" role="banner">
         <div class="container header-container">
-            <h1 class="portal-title">10th Standard Result Portal</h1>
-            <span class="badge demo-badge">Demonstration System — Academic Use Only</span>
+            <div class="brand-group">
+                <a href="{{ url_for('main.index') }}" class="brand">
+                    <span class="brand-mark">SRMS</span>
+                </a>
+                <span class="brand-divider" aria-hidden="true"></span>
+                <h1 class="portal-title">10th Standard Result Portal</h1>
+            </div>
+            <nav class="site-nav" aria-label="Portal Navigation">
+                <a href="#portals" class="nav-link">Portals</a>
+                <a href="#capabilities" class="nav-link">Verification</a>
+                <span class="badge demo-badge">Demonstration System — Academic Use Only</span>
+            </nav>
         </div>
     </header>
 
-    <main class="container main-content" id="main-content" role="main">
-        <section class="hero-section" aria-labelledby="hero-title">
-            <span class="demo-badge" style="color: var(--primary-hover); background: var(--primary-light); border-color: var(--primary-border);">A considered academic record</span>
-            <h2 id="hero-title">Results you can read with confidence.</h2>
-            <p class="lead-text">
-                A focused result portal for students and faculty. View verified marks, understand performance, and keep every update accountable.
-            </p>
-            <div class="card-grid">
-                <article class="portal-card system-card" aria-labelledby="card-student-title">
+    <main class="main-content" id="main-content" role="main">
+        <!-- Hero Section: Editorial 2-column composition -->
+        <section class="hero" aria-labelledby="hero-title">
+            <div class="container">
+                <div class="hero-grid">
+                    <div class="hero-copy">
+                        <span class="eyebrow">Academic Records Platform</span>
+                        <h2 class="hero-title" id="hero-title">
+                            Academic records, <span class="accent">made clear.</span>
+                        </h2>
+                        <p class="hero-lead">
+                            An authoritative examination management system built for secondary schools.
+                            Students access verified statements of marks, while authorized faculty manage marks and audit revisions.
+                        </p>
+                        <div class="hero-actions">
+                            <a href="#portals" class="btn btn-primary">
+                                Select Portal <span class="arrow" aria-hidden="true">→</span>
+                            </a>
+                            <a href="#capabilities" class="text-link">Explore Verification Features</a>
+                        </div>
+                        <div class="hero-meta">
+                            <span><strong>5</strong> Core Subjects</span>
+                            <span><strong>100%</strong> Server-Verified Grading</span>
+                            <span><strong>Argon2id/Scrypt</strong> Cryptographic Hashing</span>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Typeset Marksheet Preview -->
+                    <div class="sheet-stack" aria-hidden="true">
+                        <div class="sheet">
+                            <div class="sheet-head">
+                                <div>
+                                    <h3 class="sheet-title">Statement of Marks</h3>
+                                    <p class="sheet-sub">10th Standard &bull; Annual Examination 2025–26</p>
+                                </div>
+                                <div class="sheet-serial">
+                                    <span>REG: 4INI23IS036</span><br>
+                                    <span>ROLL NO: 36</span>
+                                </div>
+                            </div>
+
+                            <dl class="sheet-candidate">
+                                <div class="sheet-field">
+                                    <dt>Candidate Name</dt>
+                                    <dd>Bhavana M</dd>
+                                </div>
+                                <div class="sheet-field">
+                                    <dt>Section</dt>
+                                    <dd>Class 10 &bull; Sec A</dd>
+                                </div>
+                                <div class="sheet-field">
+                                    <dt>Status</dt>
+                                    <dd><span class="badge badge-pass">PASS</span></dd>
+                                </div>
+                            </dl>
+
+                            <div class="sheet-rows">
+                                <div class="sheet-row">
+                                    <span class="subj">Mathematics <span class="badge-pill">MAT</span></span>
+                                    <span class="leader"></span>
+                                    <span class="score">98<small>/100</small></span>
+                                </div>
+                                <div class="sheet-row">
+                                    <span class="subj">Science <span class="badge-pill">SCI</span></span>
+                                    <span class="leader"></span>
+                                    <span class="score">95<small>/100</small></span>
+                                </div>
+                                <div class="sheet-row">
+                                    <span class="subj">Social Science <span class="badge-pill">SST</span></span>
+                                    <span class="leader"></span>
+                                    <span class="score">92<small>/100</small></span>
+                                </div>
+                                <div class="sheet-row">
+                                    <span class="subj">English <span class="badge-pill">ENG</span></span>
+                                    <span class="leader"></span>
+                                    <span class="score">94<small>/100</small></span>
+                                </div>
+                                <div class="sheet-row">
+                                    <span class="subj">Hindi <span class="badge-pill">HIN</span></span>
+                                    <span class="leader"></span>
+                                    <span class="score">88<small>/100</small></span>
+                                </div>
+                            </div>
+
+                            <div class="sheet-foot">
+                                <div class="sheet-stat">
+                                    <span class="label">Total</span>
+                                    <span class="num">467<small class="muted">/500</small></span>
+                                </div>
+                                <div class="sheet-stat">
+                                    <span class="label">Percentage</span>
+                                    <span class="num accent">93.4%</span>
+                                </div>
+                                <div class="sheet-stat">
+                                    <span class="label">Grade</span>
+                                    <span class="num">A1</span>
+                                </div>
+                                <div>
+                                    <span class="sheet-stamp">VERIFIED</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="sheet-caption">Authentic system marksheet facsimile &bull; Sample candidate</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Portal Selection Section -->
+        <section class="portals" id="portals" aria-labelledby="portals-title">
+            <div class="container">
+                <div class="section-head">
                     <div>
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-                            <span class="badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">Student Access</span>
-                            <span style="font-size: 0.8rem; color: var(--muted-color); font-weight: 500;">View Results</span>
+                        <span class="eyebrow">Institutional Access</span>
+                        <h2 class="section-title" id="portals-title">Dedicated Portals</h2>
+                    </div>
+                    <p class="section-lead">
+                        Select your assigned role to access examination records or administrative evaluation workspaces.
+                    </p>
+                </div>
+
+                <div class="portal-grid">
+                    <!-- Student Portal Card -->
+                    <article class="portal-card system-card portal-card--student" aria-labelledby="card-student-title">
+                        <div class="portal-card-top">
+                            <span class="portal-index">01</span>
+                            <span class="label">Candidate Self-Service</span>
                         </div>
                         <h3 id="card-student-title">Student Portal</h3>
-                        <p>Check your 10th Standard examination results, grade breakdown, and subject performance with server-verified calculations.</p>
-                    </div>
-                    <a href="{{ url_for('auth.student_login') }}" class="btn btn-primary btn-block" id="student-login-link">Student Login</a>
-                </article>
-                <article class="portal-card system-card" aria-labelledby="card-teacher-title">
-                    <div>
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-                            <span class="badge" style="background: #f0fdfa; color: #0f766e; border: 1px solid #99f6e4;">Faculty Access</span>
-                            <span style="font-size: 0.8rem; color: var(--muted-color); font-weight: 500;">Marks Entry</span>
+                        <p class="portal-card-lead">
+                            Review your official 10th Standard examination results, grade distribution, and subject performance.
+                        </p>
+                        <ul class="feature-list" aria-label="Student portal capabilities">
+                            <li>View official statements of marks in accessible modals</li>
+                            <li>Review verified server-side percentages and grades</li>
+                            <li>Self-service credential management and password update</li>
+                        </ul>
+                        <a href="{{ url_for('auth.student_login') }}" class="btn btn-primary" id="student-login-link">Student Login</a>
+                    </article>
+
+                    <!-- Teacher Portal Card -->
+                    <article class="portal-card system-card portal-card--faculty" aria-labelledby="card-teacher-title">
+                        <div class="portal-card-top">
+                            <span class="portal-index">02</span>
+                            <span class="label">Faculty Administration</span>
                         </div>
                         <h3 id="card-teacher-title">Teacher Portal</h3>
-                        <p>Enter, update, and manage subject marks for assigned students with class performance insights and audit logs.</p>
-                    </div>
-                    <a href="{{ url_for('auth.teacher_login') }}" class="btn btn-secondary btn-block" id="teacher-login-link">Teacher Login</a>
-                </article>
+                        <p class="portal-card-lead">
+                            Manage subject evaluation, submit verified student marks, and inspect real-time class analytics.
+                        </p>
+                        <ul class="feature-list" aria-label="Teacher portal capabilities">
+                            <li>Enter and edit subject marks with real-time validation</li>
+                            <li>Review class average, pass percentage, and subject metrics</li>
+                            <li>Immutable audit logging for all marks additions and updates</li>
+                        </ul>
+                        <a href="{{ url_for('auth.teacher_login') }}" class="btn btn-inverse" id="teacher-login-link">Teacher Login</a>
+                    </article>
+                </div>
             </div>
-            <div class="feature-strip" aria-label="Platform features">
-                <div class="feature-item"><strong>Secure access</strong>Role-based sign in</div>
-                <div class="feature-item"><strong>Verified calculations</strong>Server-side grading</div>
-                <div class="feature-item"><strong>Academic records</strong>Clear subject history</div>
-                <div class="feature-item"><strong>Auditable updates</strong>Accountable marks changes</div>
+        </section>
+
+        <!-- Product Capabilities Strip -->
+        <section class="capabilities" id="capabilities" aria-labelledby="capabilities-title">
+            <div class="container">
+                <h2 class="sr-only" id="capabilities-title">System Capabilities</h2>
+                <div class="capability-grid">
+                    <div class="capability">
+                        <span class="capability-num">01</span>
+                        <h3>Secure Authentication</h3>
+                        <p>Role-based access control, Turnstile bot mitigation, and Argon2id/Scrypt password hashing.</p>
+                    </div>
+                    <div class="capability">
+                        <span class="capability-num">02</span>
+                        <h3>Authoritative Grading</h3>
+                        <p>Server-side calculation engine enforcing strict pass/fail boundaries across 5 subjects.</p>
+                    </div>
+                    <div class="capability">
+                        <span class="capability-num">03</span>
+                        <h3>Auditable Record Trail</h3>
+                        <p>Every mark alteration is permanently logged with timestamps, previous values, and user IDs.</p>
+                    </div>
+                    <div class="capability">
+                        <span class="capability-num">04</span>
+                        <h3>Accessible Design</h3>
+                        <p>WCAG 2.1 AA compliant, screen-reader optimized, keyboard traps on modals, and semantic HTML.</p>
+                    </div>
+                </div>
+
+                <div class="feature-strip" aria-label="Platform features">
+                    <div class="feature-item"><strong>Secure access</strong>Role-based sign in</div>
+                    <div class="feature-item"><strong>Verified calculations</strong>Server-side grading</div>
+                    <div class="feature-item"><strong>Academic records</strong>Clear subject history</div>
+                    <div class="feature-item"><strong>Auditable updates</strong>Accountable marks changes</div>
+                </div>
             </div>
         </section>
     </main>
 
     <footer class="site-footer" role="contentinfo">
-        <div class="container">
-            <p>&copy; 2026 SRMS Academic Lab Project. Fictional sample data only.</p>
+        <div class="container footer-inner">
+            <div class="footer-brand">
+                <span class="brand-mark brand-mark--sm">SRMS</span>
+                <span>&copy; 2026 Student Result Management System &bull; Academic Lab Project</span>
+            </div>
+            <div class="footer-meta">
+                <span class="muted">Software Testing & Quality Assurance Laboratory</span>
+            </div>
         </div>
     </footer>
 </body>

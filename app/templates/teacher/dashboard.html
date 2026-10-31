@@ -6,208 +6,230 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Teacher Dashboard — SRMS</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <style>
-        .input-mark {
-            width: 105px;
-            padding: 0.45rem 0.65rem;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            font-size: 0.95rem;
-            font-weight: 600;
-            transition: all 0.15s ease;
-        }
-        .input-mark:focus-visible {
-            outline: 2px solid var(--focus-ring);
-            outline-offset: 1px;
-            border-color: transparent;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-        }
-        .input-mark:disabled {
-            background-color: #f1f5f9;
-            color: var(--muted-color);
-            cursor: not-allowed;
-            border-color: #e2e8f0;
-        }
-        .field-error-msg {
-            color: var(--error-color);
-            font-size: 0.8rem;
-            margin-top: 0.3rem;
-            display: block;
-            font-weight: 500;
-        }
-    </style>
 </head>
 <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <header class="site-header" role="banner">
         <div class="container header-container">
-            <div style="display: flex; align-items: center; gap: 0.85rem;">
-                <h1 class="portal-title">Teacher Portal</h1>
-                <span class="demo-badge">Marks Evaluation</span>
+            <div class="brand-group">
+                <a href="{{ url_for('main.index') }}" class="brand">
+                    <span class="brand-mark">SRMS</span>
+                    <span class="brand-divider"></span>
+                    <h1 class="portal-title">Teacher Portal</h1>
+                </a>
             </div>
-            <div class="header-user-info" style="display: flex; align-items: center; gap: 0.75rem;">
-                <span>Logged in as: <strong>{{ current_user.login_id }}</strong></span>
-                <button type="button" class="btn btn-outline" id="btn-open-change-password" style="padding: 0.4rem 0.85rem; font-size: 0.85rem;">Change Password</button>
-                <form method="POST" action="{{ url_for('auth.logout') }}" style="display: inline;">
+            <div class="header-user-info">
+                <span class="muted">Logged in as: <strong>{{ current_user.login_id }}</strong></span>
+                <button type="button" class="btn btn-outline" id="btn-open-change-password">Change Password</button>
+                <form method="POST" action="{{ url_for('auth.logout') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <button type="submit" class="btn btn-outline" id="btn-logout" style="padding: 0.4rem 0.85rem; font-size: 0.85rem;">Logout</button>
+                    <button type="submit" class="btn btn-outline" id="btn-logout">Logout</button>
                 </form>
             </div>
         </div>
     </header>
 
     <main class="container main-content" id="main-content" role="main">
-        <div class="card" aria-labelledby="teacher-profile-heading">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem;">
-                <h2 class="card-title" id="teacher-profile-heading" style="margin-bottom: 0;">Teacher Profile</h2>
-                <span class="badge" style="background: #f0fdfa; color: #0f766e; border: 1px solid #99f6e4;">Authorized Evaluator</span>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;">
-                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <span style="color: var(--muted-color); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Teacher Name:</span>
-                    <p style="font-weight: 700; font-size: 1.15rem; color: #0f172a; margin-top: 0.25rem;">{{ teacher.full_name if teacher else 'Teacher' }}</p>
-                </div>
-                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <span style="color: var(--muted-color); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Teacher Code:</span>
-                    <p style="font-weight: 700; font-size: 1.15rem; color: #0f172a; margin-top: 0.25rem;"><code>{{ current_user.login_id }}</code></p>
-                </div>
-                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <span style="color: var(--muted-color); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Active Term:</span>
-                    <p style="font-weight: 700; font-size: 1.15rem; color: #0f172a; margin-top: 0.25rem;">{{ latest_exam.academic_year if latest_exam else '2025-26' }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Teacher Insights & Class Performance Analytics (TC-INSIGHTS) -->
-        <div class="card" id="insights-container" style="display: none;" aria-labelledby="insights-heading">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-                <h2 class="card-title" id="insights-heading" style="margin-bottom: 0;">Class Performance Insights</h2>
-                <span class="badge" style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe;">Class Analytics</span>
-            </div>
-            <p style="color: var(--muted-color); font-size: 0.92rem; margin-bottom: 1.5rem;">
-                Aggregated academic metrics across assigned students and subject-wise performance breakdown.
-            </p>
-
-            <div class="summary-grid" role="region" aria-label="Class analytics summary" style="margin-top: 0; margin-bottom: 1.75rem;">
-                <div class="summary-card">
-                    <div class="label">Class Average</div>
-                    <div class="value" id="insight-class-avg">—</div>
-                    <small style="color: var(--muted-color); font-size: 0.82rem; display: block; margin-top: 0.35rem;" id="insight-class-total">—</small>
-                </div>
-                <div class="summary-card">
-                    <div class="label">Pass Rate</div>
-                    <div class="value" id="insight-pass-rate">—</div>
-                    <small style="color: var(--muted-color); font-size: 0.82rem; display: block; margin-top: 0.35rem;" id="insight-pass-counts">—</small>
-                </div>
-                <div class="summary-card">
-                    <div class="label">Assigned Students</div>
-                    <div class="value" id="insight-total-students">—</div>
-                    <small style="color: var(--muted-color); font-size: 0.82rem; display: block; margin-top: 0.35rem;" id="insight-eval-students">—</small>
-                </div>
-            </div>
-
-            <div style="margin-top: 1.25rem;">
-                <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.75rem; color: #1e293b;">Subject-Wise Performance</h3>
-                <div class="table-responsive">
-                    <table class="table" id="insights-subject-table">
-                        <caption class="sr-only">Subject performance statistics</caption>
-                        <thead>
-                            <tr>
-                                <th scope="col">Subject</th>
-                                <th scope="col">Max Marks</th>
-                                <th scope="col">Average Score</th>
-                                <th scope="col">Highest Score</th>
-                                <th scope="col">Lowest Score</th>
-                                <th scope="col">Pass Rate</th>
-                            </tr>
-                        </thead>
-                        <tbody id="insights-subject-tbody">
-                            <!-- Populated dynamically via /api/teacher/students insights -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="card" aria-labelledby="students-list-heading">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.75rem;">
+        <div class="page-head">
+            <div class="page-head-row">
                 <div>
-                    <h2 class="card-title" id="students-list-heading" style="margin-bottom: 0.25rem;">Assigned Students</h2>
-                    <p style="color: var(--muted-color); font-size: 0.92rem;">
-                        Students and subjects assigned to your account. Select a student to enter or update marks.
+                    <div class="eyebrow">Faculty Evaluation Console</div>
+                    <h2 class="page-title">Marks Ledger &amp; Cohort Analytics</h2>
+                    <p class="page-subtitle">
+                        Authorized marks entry, validation, and aggregated performance reporting for assigned cohorts.
                     </p>
                 </div>
-                {% if latest_exam %}
                 <div>
-                    <span class="badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 0.85rem; padding: 0.4rem 0.85rem;">
-                        Exam: {{ latest_exam.name }}
-                    </span>
+                    <span class="badge badge-success">Authorized Evaluator</span>
                 </div>
-                {% endif %}
             </div>
+        </div>
 
-            <div id="students-loading" style="text-align: center; padding: 2.5rem;" aria-live="polite">
-                <p style="color: var(--muted-color); font-weight: 500;">Loading assigned students...</p>
-            </div>
-            <div id="students-error" class="alert alert-error" style="display: none;" role="alert" aria-live="polite"></div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}" role="status">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
 
-            <div class="table-responsive" id="students-table-container" style="display: none;">
-                <table class="table" id="students-table">
-                    <caption class="sr-only">List of assigned students for marks entry</caption>
-                    <thead>
-                        <tr>
-                            <th scope="col">Student Code</th>
-                            <th scope="col">Full Name</th>
-                            <th scope="col">Section</th>
-                            <th scope="col">Roll No</th>
-                            <th scope="col">Assigned Subjects</th>
-                            <th scope="col">Result Status</th>
-                            <th scope="col">Marks / Grade</th>
-                            <th scope="col">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="students-table-body">
-                        <!-- Populated dynamically via /api/teacher/students -->
-                    </tbody>
-                </table>
+        <div class="workspace">
+            <!-- Left Sidebar: Evaluator Credentials & Section Navigation -->
+            <aside class="workspace-nav" aria-label="Faculty Navigation">
+                <div class="label">Faculty Navigation</div>
+                <nav class="workspace-nav-list">
+                    <a href="#sec-evaluator"><span>01</span> Evaluator Profile</a>
+                    <a href="#sec-insights"><span>02</span> Cohort Analytics</a>
+                    <a href="#sec-roster"><span>03</span> Student Roster</a>
+                </nav>
+
+                <div class="workspace-aside-note">
+                    <strong>Grading Policy</strong>
+                    Evaluator marks must conform to standard 10th evaluation rubrics. Pass mark is 35/100 per subject. Overall aggregate distinction is 80%+.
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <div class="workspace-main">
+                <!-- Section 1: Teacher Profile -->
+                <section class="panel section-anchor" id="sec-evaluator" aria-labelledby="teacher-profile-heading">
+                    <div class="panel-head">
+                        <div>
+                            <h3 class="panel-title" id="teacher-profile-heading">Faculty Evaluator Profile</h3>
+                            <p class="panel-note">Institutional identification and active academic session.</p>
+                        </div>
+                    </div>
+
+                    <div class="meta-list">
+                        <div class="meta-item">
+                            <span class="meta-label">Teacher Name:</span>
+                            <p class="meta-value">{{ teacher.full_name if teacher else 'Teacher' }}</p>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Teacher Code:</span>
+                            <p class="meta-value"><code>{{ current_user.login_id }}</code></p>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Active Term:</span>
+                            <p class="meta-value">{{ latest_exam.academic_year if latest_exam else '2025-26' }}</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 2: Performance Insights & Analytics -->
+                <section class="panel section-anchor" id="sec-insights" aria-labelledby="insights-heading">
+                    <div id="insights-container">
+                        <div class="panel-head">
+                            <div>
+                                <h3 class="panel-title" id="insights-heading">Class Performance Insights</h3>
+                                <p class="panel-note">Aggregated cohort performance and subject-level distribution metrics.</p>
+                            </div>
+                            <span class="badge badge-neutral">Class Analytics</span>
+                        </div>
+
+                        <!-- Ruled Stat Row -->
+                        <div class="stat-row" role="region" aria-label="Class analytics summary">
+                            <div class="stat stat--accent">
+                                <span class="label">Class Average</span>
+                                <div class="value" id="insight-class-avg">—</div>
+                                <span class="stat-sub" id="insight-class-total">—</span>
+                            </div>
+                            <div class="stat">
+                                <span class="label">Pass Rate</span>
+                                <div class="value" id="insight-pass-rate">—</div>
+                                <span class="stat-sub" id="insight-pass-counts">—</span>
+                            </div>
+                            <div class="stat">
+                                <span class="label">Assigned Cohort</span>
+                                <div class="value" id="insight-total-students">—</div>
+                                <span class="stat-sub" id="insight-eval-students">—</span>
+                            </div>
+                        </div>
+
+                        <div class="insights-subject-wrap">
+                            <div class="table-caption-row">
+                                <span class="label">Subject-Wise Performance Distribution</span>
+                                <span class="muted font-mono">Verified Aggregates</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table" id="insights-subject-table">
+                                    <caption class="sr-only">Subject performance statistics</caption>
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Subject</th>
+                                            <th scope="col" class="col-num">Max Marks</th>
+                                            <th scope="col" class="col-num">Average Score</th>
+                                            <th scope="col" class="col-num">Highest Score</th>
+                                            <th scope="col" class="col-num">Lowest Score</th>
+                                            <th scope="col">Pass Rate</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="insights-subject-tbody">
+                                        <!-- Populated dynamically via /api/teacher/students insights -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 3: Student Roster -->
+                <section class="panel section-anchor" id="sec-roster" aria-labelledby="students-list-heading">
+                    <div class="panel-head">
+                        <div>
+                            <h3 class="panel-title" id="students-list-heading">Assigned Students Roster</h3>
+                            <p class="panel-note">Select an assigned student to enter, verify, or update subject marks.</p>
+                        </div>
+                        {% if latest_exam %}
+                        <span class="badge badge-neutral">Exam: {{ latest_exam.name }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div id="students-loading" class="loading" aria-live="polite">
+                        Loading assigned student roster...
+                    </div>
+                    <div id="students-error" class="alert alert-error" role="alert" aria-live="polite"></div>
+
+                    <div class="table-responsive" id="students-table-container">
+                        <table class="table roster-table" id="students-table">
+                            <caption class="sr-only">List of assigned students for marks entry</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Student Code</th>
+                                    <th scope="col">Full Name</th>
+                                    <th scope="col">Section</th>
+                                    <th scope="col">Roll No</th>
+                                    <th scope="col">Assigned Subjects</th>
+                                    <th scope="col">Result Status</th>
+                                    <th scope="col">Marks / Grade</th>
+                                    <th scope="col">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="students-table-body">
+                                <!-- Populated dynamically via /api/teacher/students -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
             </div>
         </div>
     </main>
 
     <!-- Marks Editor Modal (TC-UI-06) -->
     <div class="modal-backdrop" id="marks-modal-backdrop" aria-hidden="true">
-        <div class="modal-dialog" id="marks-modal" role="dialog" aria-modal="true" aria-labelledby="marks-modal-title" tabindex="-1" style="max-width: 780px;">
+        <div class="modal-dialog modal-dialog--wide" id="marks-modal" role="dialog" aria-modal="true" aria-labelledby="marks-modal-title" tabindex="-1">
             <div class="modal-header">
                 <div>
+                    <div class="modal-kicker eyebrow eyebrow--plain">Faculty Grade Ledger</div>
                     <h2 class="modal-title" id="marks-modal-title">Enter / Edit Marks</h2>
-                    <p id="marks-modal-subtitle" style="font-size: 0.88rem; color: var(--muted-color); margin-top: 0.25rem; font-weight: 500;"></p>
+                    <p id="marks-modal-subtitle" class="modal-subtitle"></p>
                 </div>
                 <button type="button" class="modal-close" id="marks-modal-close-btn" aria-label="Close dialog">&times;</button>
             </div>
             <div class="modal-body">
-                <div id="marks-modal-loading" style="text-align: center; padding: 2rem;" aria-live="polite">
-                    <p style="color: var(--muted-color); font-weight: 500;">Loading marks data...</p>
+                <div id="marks-modal-loading" class="loading" aria-live="polite">
+                    Loading student marks data...
                 </div>
-                <div id="marks-modal-error" class="alert alert-error" style="display: none;" role="alert" aria-live="polite"></div>
-                <div id="marks-modal-success" class="alert alert-success" style="display: none;" role="status" aria-live="polite"></div>
+                <div id="marks-modal-error" class="alert alert-error" role="alert" aria-live="polite"></div>
+                <div id="marks-modal-success" class="alert alert-success" role="status" aria-live="polite"></div>
 
-                <div id="marks-modal-content" style="display: none;">
+                <div id="marks-modal-content">
                     <!-- Result Summary Preview -->
-                    <div class="summary-grid" style="margin-top: 0;" role="region" aria-label="Current marks preview">
+                    <div class="summary-grid" role="region" aria-label="Current marks preview">
                         <div class="summary-card">
-                            <div class="label">Total Marks</div>
+                            <span class="label">Total Marks</span>
                             <div class="value" id="modal-res-total">—</div>
                         </div>
-                        <div class="summary-card">
-                            <div class="label">Percentage</div>
+                        <div class="summary-card summary-card--accent">
+                            <span class="label">Percentage</span>
                             <div class="value" id="modal-res-percentage">—</div>
                         </div>
                         <div class="summary-card">
-                            <div class="label">Grade</div>
+                            <span class="label">Grade</span>
                             <div class="value" id="modal-res-grade">—</div>
                         </div>
                         <div class="summary-card">
-                            <div class="label">Status</div>
+                            <span class="label">Status</span>
                             <div class="value" id="modal-res-status">—</div>
                         </div>
                     </div>
@@ -219,8 +241,8 @@
                                 <thead>
                                     <tr>
                                         <th scope="col">Subject</th>
-                                        <th scope="col">Max Marks</th>
-                                        <th scope="col">Pass Marks</th>
+                                        <th scope="col" class="col-num">Max Marks</th>
+                                        <th scope="col" class="col-num">Pass Marks</th>
                                         <th scope="col">Marks Obtained</th>
                                         <th scope="col">Status / Edit Permission</th>
                                     </tr>
@@ -242,31 +264,34 @@
 
     <!-- Change Password Modal -->
     <div class="modal-backdrop" id="change-password-backdrop" role="dialog" aria-modal="true" aria-labelledby="change-password-title" aria-hidden="true">
-        <div class="modal-dialog" id="change-password-modal" tabindex="-1" style="max-width: 480px;">
+        <div class="modal-dialog modal-dialog--narrow" id="change-password-modal" tabindex="-1">
             <div class="modal-header">
-                <h3 class="modal-title" id="change-password-title">Change Password</h3>
+                <div>
+                    <h3 class="modal-title" id="change-password-title">Change Password</h3>
+                    <div class="modal-subtitle">Update your faculty account credentials</div>
+                </div>
                 <button type="button" class="modal-close" id="change-password-close-btn" aria-label="Close dialog">&times;</button>
             </div>
             <form id="form-change-password">
                 <div class="modal-body">
-                    <div id="change-password-error" class="alert alert-error" style="display: none; margin-bottom: 1rem;" role="alert"></div>
-                    <div id="change-password-success" class="alert alert-success" style="display: none; margin-bottom: 1rem;" role="alert"></div>
+                    <div id="change-password-error" class="alert alert-error" role="alert"></div>
+                    <div id="change-password-success" class="alert alert-success" role="alert"></div>
 
-                    <div class="form-group" style="margin-bottom: 1.15rem;">
-                        <label for="input-current-password" style="display: block; font-weight: 600; margin-bottom: 0.4rem;">Current Password</label>
+                    <div class="form-group">
+                        <label for="input-current-password">Current Password</label>
                         <input type="password" id="input-current-password" class="form-control" required autocomplete="current-password" placeholder="••••••••••••">
                     </div>
 
-                    <div class="form-group" style="margin-bottom: 1.15rem;">
-                        <label for="input-new-password" style="display: block; font-weight: 600; margin-bottom: 0.4rem;">New Password</label>
+                    <div class="form-group">
+                        <label for="input-new-password">New Password</label>
                         <input type="password" id="input-new-password" class="form-control" required autocomplete="new-password" minlength="12" placeholder="••••••••••••">
-                        <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.35rem;">
+                        <small class="form-text">
                             Must be at least 12 characters and include uppercase, lowercase, numbers, and special characters.
                         </small>
                     </div>
 
-                    <div class="form-group" style="margin-bottom: 0.5rem;">
-                        <label for="input-confirm-password" style="display: block; font-weight: 600; margin-bottom: 0.4rem;">Confirm New Password</label>
+                    <div class="form-group">
+                        <label for="input-confirm-password">Confirm New Password</label>
                         <input type="password" id="input-confirm-password" class="form-control" required autocomplete="new-password" minlength="12" placeholder="••••••••••••">
                     </div>
                 </div>
@@ -279,7 +304,7 @@
     </div>
 
     <footer class="site-footer" role="contentinfo">
-        <div class="container">
+        <div class="container footer-content">
             <p>&copy; 2026 SRMS Academic Lab Project. Fictional sample data only.</p>
         </div>
     </footer>

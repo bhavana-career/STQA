@@ -11,134 +11,124 @@
 <body>
     <header class="site-header" role="banner">
         <div class="container header-container">
-            <h1 class="portal-title">SRMS System Administration</h1>
-            <span class="badge" style="background: #e0f2fe; color: #0369a1;">One-Time Account Provisioning</span>
+            <div class="brand-group">
+                <a href="{{ url_for('main.index') }}" class="brand">
+                    <span class="brand-mark">SRMS</span>
+                    <span class="brand-divider"></span>
+                    <h1 class="portal-title">System Administration</h1>
+                </a>
+            </div>
+            <span class="badge badge-warning">One-Time Account Provisioning</span>
         </div>
     </header>
 
-    <main class="container main-content" id="main-content" role="main" style="max-width: 600px; margin: 2rem auto;">
-        <div class="card" style="padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-            <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.5rem;">
-                Initial Account Provisioning
-            </h2>
-            <p style="color: var(--muted-color); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.4;">
-                This one-time setup workflow provisions the General Teacher (<code>TCH001</code>) and 5 student accounts (<code>4INI23IS036</code>, <code>4INI23IS001</code>, <code>4INI23IS002</code>, <code>4INI23IS003</code>, <code>4INI23IS004</code>) across 5 subjects with realistic marks and full authorization in production Neon. Once submitted, this route automatically self-locks.
-            </p>
+    <main class="container main-content" id="main-content" role="main">
+        <div class="admin-shell">
+            <div class="card admin-card">
+                <div class="admin-card-head">
+                    <div class="eyebrow">Database Initialization</div>
+                    <h2 class="admin-title">Initial Account Provisioning</h2>
+                    <p class="admin-lead">
+                        This one-time setup workflow provisions the General Teacher (<code>TCH001</code>) and 5 student accounts (<code>4INI23IS036</code>, <code>4INI23IS001</code>, <code>4INI23IS002</code>, <code>4INI23IS003</code>, <code>4INI23IS004</code>) across 5 subjects with realistic marks and full authorization in production Neon. Once submitted, this route automatically self-locks.
+                    </p>
+                </div>
 
-            {% if error %}
-            <div class="alert alert-error" role="alert" style="background: #fef2f2; border: 1px solid #f87171; color: #991b1b; padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1.25rem;">
-                {{ error }}
+                {% if error %}
+                <div class="alert alert-error" role="alert">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="{{ url_for('provision.process_provision') }}" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                    <!-- Provisioning Secret (Masked input) -->
+                    <div class="form-group">
+                        <label for="provisioning_secret">Provisioning Secret</label>
+                        <input type="password"
+                               name="provisioning_secret"
+                               id="provisioning_secret"
+                               class="form-control"
+                               required
+                               autocomplete="off"
+                               placeholder="Enter Render PROVISIONING_SECRET">
+                        <small class="form-text">Matches the secret token configured in your production environment variables.</small>
+                    </div>
+
+                    <hr class="rule">
+
+                    <!-- Teacher Account Configuration -->
+                    <div class="admin-section">
+                        <h3 class="admin-section-title">General Teacher Account (<code>TCH001</code>)</h3>
+
+                        <div class="form-group">
+                            <label for="teacher_password">Teacher Password</label>
+                            <input type="password"
+                                   name="teacher_password"
+                                   id="teacher_password"
+                                   class="form-control"
+                                   required
+                                   autocomplete="new-password"
+                                   minlength="12"
+                                   placeholder="••••••••••••">
+                            <small class="form-text">Minimum 12 characters with uppercase, lowercase, numbers, and special characters.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirm_teacher_password">Confirm Teacher Password</label>
+                            <input type="password"
+                                   name="confirm_teacher_password"
+                                   id="confirm_teacher_password"
+                                   class="form-control"
+                                   required
+                                   autocomplete="new-password"
+                                   minlength="12"
+                                   placeholder="••••••••••••">
+                        </div>
+                    </div>
+
+                    <hr class="rule">
+
+                    <!-- Student Accounts Configuration -->
+                    <div class="admin-section">
+                        <h3 class="admin-section-title">Student Accounts (5 USNs: <code>4INI23IS036</code>, <code>4INI23IS001</code>, ...)</h3>
+
+                        <div class="form-group">
+                            <label for="student_password">Student Demo Password</label>
+                            <input type="password"
+                                   name="student_password"
+                                   id="student_password"
+                                   class="form-control"
+                                   required
+                                   autocomplete="new-password"
+                                   minlength="12"
+                                   placeholder="••••••••••••">
+                            <small class="form-text">Minimum 12 characters with uppercase, lowercase, numbers, and special characters.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirm_student_password">Confirm Student Password</label>
+                            <input type="password"
+                                   name="confirm_student_password"
+                                   id="confirm_student_password"
+                                   class="form-control"
+                                   required
+                                   autocomplete="new-password"
+                                   minlength="12"
+                                   placeholder="••••••••••••">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-block">Provision Accounts Atomically</button>
+                    </div>
+                </form>
             </div>
-            {% endif %}
-
-            <form method="POST" action="{{ url_for('provision.process_provision') }}" novalidate>
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-
-                <!-- Provisioning Secret (Masked input) -->
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <label for="provisioning_secret" style="display: block; font-weight: 600; margin-bottom: 0.35rem;">
-                        Provisioning Secret
-                    </label>
-                    <input type="password"
-                           name="provisioning_secret"
-                           id="provisioning_secret"
-                           class="form-control"
-                           required
-                           autocomplete="off"
-                           placeholder="Enter Render PROVISIONING_SECRET"
-                           style="width: 100%; padding: 0.55rem; border: 1px solid var(--border-color); border-radius: 4px;">
-                    <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.25rem;">
-                        Matches the secret token set in your Render environment variables.
-                    </small>
-                </div>
-
-                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
-
-                <!-- Teacher Account Configuration -->
-                <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--primary-color); margin-bottom: 0.75rem;">
-                    General Teacher Account (Login ID: <code>TCH001</code>)
-                </h3>
-
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label for="teacher_password" style="display: block; font-weight: 600; margin-bottom: 0.35rem;">
-                        Teacher Password
-                    </label>
-                    <input type="password"
-                           name="teacher_password"
-                           id="teacher_password"
-                           class="form-control"
-                           required
-                           autocomplete="new-password"
-                           minlength="12"
-                           style="width: 100%; padding: 0.55rem; border: 1px solid var(--border-color); border-radius: 4px;">
-                    <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.25rem;">
-                        Minimum 12 characters with uppercase, lowercase, numbers, and special characters.
-                    </small>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <label for="confirm_teacher_password" style="display: block; font-weight: 600; margin-bottom: 0.35rem;">
-                        Confirm Teacher Password
-                    </label>
-                    <input type="password"
-                           name="confirm_teacher_password"
-                           id="confirm_teacher_password"
-                           class="form-control"
-                           required
-                           autocomplete="new-password"
-                           minlength="12"
-                           style="width: 100%; padding: 0.55rem; border: 1px solid var(--border-color); border-radius: 4px;">
-                </div>
-
-                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
-
-                <!-- Student Accounts Configuration -->
-                <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--primary-color); margin-bottom: 0.75rem;">
-                    Student Accounts (5 USNs: <code>4INI23IS036</code>, <code>4INI23IS001</code>, ...)
-                </h3>
-
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label for="student_password" style="display: block; font-weight: 600; margin-bottom: 0.35rem;">
-                        Student Demo Password
-                    </label>
-                    <input type="password"
-                           name="student_password"
-                           id="student_password"
-                           class="form-control"
-                           required
-                           autocomplete="new-password"
-                           minlength="12"
-                           style="width: 100%; padding: 0.55rem; border: 1px solid var(--border-color); border-radius: 4px;">
-                    <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.25rem;">
-                        Minimum 12 characters with uppercase, lowercase, numbers, and special characters.
-                    </small>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <label for="confirm_student_password" style="display: block; font-weight: 600; margin-bottom: 0.35rem;">
-                        Confirm Student Password
-                    </label>
-                    <input type="password"
-                           name="confirm_student_password"
-                           id="confirm_student_password"
-                           class="form-control"
-                           required
-                           autocomplete="new-password"
-                           minlength="12"
-                           style="width: 100%; padding: 0.55rem; border: 1px solid var(--border-color); border-radius: 4px;">
-                </div>
-
-                <button type="submit"
-                        class="btn btn-primary"
-                        style="width: 100%; padding: 0.75rem; font-size: 1rem; font-weight: 600; cursor: pointer;">
-                    Provision Accounts Atomically
-                </button>
-            </form>
         </div>
     </main>
 
-    <footer class="site-footer" role="contentinfo" style="margin-top: 3rem; text-align: center; color: var(--muted-color); font-size: 0.85rem;">
-        <div class="container">
+    <footer class="site-footer" role="contentinfo">
+        <div class="container footer-content">
             <p>&copy; 2026 SRMS Academic Lab Project. Production Administration.</p>
         </div>
     </footer>

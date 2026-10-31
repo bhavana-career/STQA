@@ -11,108 +11,218 @@
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <header class="site-header" role="banner">
         <div class="container header-container">
-            <div style="display: flex; align-items: center; gap: 0.85rem;">
-                <h1 class="portal-title">Student Portal</h1>
-                <span class="demo-badge">Academic Verification</span>
+            <div class="brand-group">
+                <a href="{{ url_for('main.index') }}" class="brand">
+                    <span class="brand-mark">SRMS</span>
+                    <span class="brand-divider"></span>
+                    <h1 class="portal-title">Student Portal</h1>
+                </a>
             </div>
-            <div class="header-user-info" style="display: flex; align-items: center; gap: 0.75rem;">
-                <span>Logged in as: <strong>{{ current_user.login_id }}</strong></span>
-                <button type="button" class="btn btn-outline" id="btn-open-change-password" style="padding: 0.4rem 0.85rem; font-size: 0.85rem;">Change Password</button>
-                <form method="POST" action="{{ url_for('auth.logout') }}" style="display: inline;">
+            <div class="header-user-info">
+                <span class="muted">Logged in as: <strong>{{ current_user.login_id }}</strong></span>
+                <button type="button" class="btn btn-outline" id="btn-open-change-password">Change Password</button>
+                <form method="POST" action="{{ url_for('auth.logout') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <button type="submit" class="btn btn-outline" id="btn-logout" style="padding: 0.4rem 0.85rem; font-size: 0.85rem;">Logout</button>
+                    <button type="submit" class="btn btn-outline" id="btn-logout">Logout</button>
                 </form>
             </div>
         </div>
     </header>
 
     <main class="container main-content" id="main-content" role="main">
-        <div class="card" aria-labelledby="profile-heading">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem;">
-                <h2 class="card-title" id="profile-heading" style="margin-bottom: 0;">Student Profile</h2>
-                <span class="badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">Enrolled Student</span>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1.25rem;">
-                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <span style="color: var(--muted-color); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Full Name</span>
-                    <p style="font-weight: 700; font-size: 1.15rem; color: #0f172a; margin-top: 0.25rem;" id="student-name">{{ student.full_name }}</p>
+        <div class="page-head">
+            <div class="page-head-row">
+                <div>
+                    <div class="eyebrow">Academic Records Ledger</div>
+                    <h2 class="page-title">Candidate Profile &amp; Statement</h2>
+                    <p class="page-subtitle">
+                        Official academic records for Standard 10th examinations. All totals, percentages, and grade bands are verified server-side.
+                    </p>
                 </div>
-                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <span style="color: var(--muted-color); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Student ID / USN</span>
-                    <p style="font-weight: 700; font-size: 1.15rem; color: #0f172a; margin-top: 0.25rem;" id="student-code"><code>{{ current_user.login_id }}</code></p>
-                </div>
-                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <span style="color: var(--muted-color); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Class &amp; Section</span>
-                    <p style="font-weight: 700; font-size: 1.15rem; color: #0f172a; margin-top: 0.25rem;">{{ student.section.class_name }} &bull; Section {{ student.section.name }}</p>
-                </div>
-                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <span style="color: var(--muted-color); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Roll Number</span>
-                    <p style="font-weight: 700; font-size: 1.15rem; color: #0f172a; margin-top: 0.25rem;">{{ student.roll_number }}</p>
+                <div>
+                    <span class="badge badge-success">Active Enrollment</span>
                 </div>
             </div>
         </div>
 
-        <div class="card" aria-labelledby="exam-heading">
-            <h2 class="card-title" id="exam-heading">Examination Results</h2>
-            <p style="color: var(--muted-color); margin-bottom: 1.5rem; font-size: 0.95rem;">
-                Official academic records for Standard 10th examinations. All grades and totals are computed and verified server-side.
-            </p>
-            {% if latest_exam %}
-                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.25rem; padding: 1.5rem; background: #ffffff; border-radius: 10px; border: 1px solid var(--border-color); box-shadow: var(--shadow-xs);">
-                    <div>
-                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
-                            <h3 style="font-size: 1.2rem; font-weight: 700; color: #0f172a;">{{ latest_exam.name }}</h3>
-                            <span class="badge" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac;">Published</span>
-                        </div>
-                        <p style="color: var(--muted-color); font-size: 0.88rem;">Academic Term: <strong>{{ latest_exam.academic_year }}</strong> &bull; Total Evaluation Modules: 5</p>
-                    </div>
-                    <button type="button" class="btn btn-primary" id="btn-view-result" aria-haspopup="dialog" aria-controls="result-modal">
-                        View Detailed Result
-                    </button>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}" role="status">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="student-grid">
+            <!-- Left Column: Student Dossier -->
+            <aside class="record-card" aria-labelledby="profile-heading">
+                <div class="panel-head">
+                    <h3 class="panel-title" id="profile-heading">Candidate Dossier</h3>
+                    <span class="badge badge-neutral">Class 10th</span>
                 </div>
-            {% else %}
+
+                <div class="meta-list">
+                    <div class="meta-item">
+                        <span class="meta-label">Full Name</span>
+                        <div class="meta-value" id="student-name">{{ student.full_name }}</div>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Candidate USN</span>
+                        <div class="meta-value" id="student-code"><code>{{ current_user.login_id }}</code></div>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Class &amp; Section</span>
+                        <div class="meta-value">{{ student.section.class_name }} &bull; Section {{ student.section.name }}</div>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Roll Number</span>
+                        <div class="meta-value">{{ student.roll_number }}</div>
+                    </div>
+                </div>
+
+                <div class="record-card-foot">
+                    Academic records maintained under institutional jurisdiction. For discrepancies in candidate records, contact the examination controller.
+                </div>
+            </aside>
+
+            <!-- Right Column: Examination Ledger -->
+            <section class="student-main" aria-labelledby="exam-heading">
+                <div class="panel-head">
+                    <div>
+                        <h3 class="panel-title" id="exam-heading">Published Examinations</h3>
+                        <p class="panel-note">Official score ledger for 10th standard evaluation cycles.</p>
+                    </div>
+                </div>
+
+                {% if latest_exam %}
+                <div class="exam-entry">
+                    <div class="exam-entry-index">01</div>
+                    <div class="exam-entry-body">
+                        <div class="badge-group">
+                            <span class="badge badge-pass">Published</span>
+                        </div>
+                        <h4 class="exam-entry-title">{{ latest_exam.name }}</h4>
+                        <div class="exam-entry-meta">
+                            <span>Academic Year: <strong>{{ latest_exam.academic_year }}</strong></span>
+                            <span>&bull;</span>
+                            <span>Evaluation Modules: <strong>5 Subjects</strong></span>
+                        </div>
+                    </div>
+                    <div class="exam-entry-action">
+                        <button type="button" class="btn btn-primary" id="btn-view-result" aria-haspopup="dialog" aria-controls="result-modal">View Detailed Result</button>
+                    </div>
+                </div>
+
+                <div class="grade-scale">
+                    <div class="table-caption-row">
+                        <span class="label">Grading Band Reference</span>
+                        <span class="muted font-mono">10th Standard Academic Standard</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Percentage Range</th>
+                                    <th scope="col">Grade</th>
+                                    <th scope="col">Classification</th>
+                                    <th scope="col">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>90% – 100%</strong></td>
+                                    <td><span class="badge badge-pass">O</span></td>
+                                    <td>Outstanding</td>
+                                    <td>Pass</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>80% – 89%</strong></td>
+                                    <td><span class="badge badge-pass">A+</span></td>
+                                    <td>Excellent</td>
+                                    <td>Pass</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>70% – 79%</strong></td>
+                                    <td><span class="badge badge-pass">A</span></td>
+                                    <td>Very Good</td>
+                                    <td>Pass</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>60% – 69%</strong></td>
+                                    <td><span class="badge badge-pass">B+</span></td>
+                                    <td>Good</td>
+                                    <td>Pass</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>50% – 59%</strong></td>
+                                    <td><span class="badge badge-pass">B</span></td>
+                                    <td>Above Average</td>
+                                    <td>Pass</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>40% – 49%</strong></td>
+                                    <td><span class="badge badge-pass">C</span></td>
+                                    <td>Average (Pass Threshold)</td>
+                                    <td>Pass</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Below 40%</strong></td>
+                                    <td><span class="badge badge-fail">F</span></td>
+                                    <td>Fail</td>
+                                    <td>Fail</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% else %}
                 <div class="empty-state">
                     <h3>No Published Examinations</h3>
                     <p>There are currently no examination results available for your profile.</p>
                 </div>
-            {% endif %}
+                {% endif %}
+            </section>
         </div>
     </main>
 
     <!-- Result Modal (TC-UI-04, TC-UI-05) -->
     <div class="modal-backdrop" id="result-modal-backdrop" aria-hidden="true">
-        <div class="modal-dialog" id="result-modal" role="dialog" aria-modal="true" aria-labelledby="result-modal-title" tabindex="-1">
+        <div class="modal-dialog modal-dialog--wide" id="result-modal" role="dialog" aria-modal="true" aria-labelledby="result-modal-title" tabindex="-1">
             <div class="modal-header">
                 <div>
+                    <div class="modal-kicker eyebrow eyebrow--plain">Official Statement of Marks</div>
                     <h2 class="modal-title" id="result-modal-title">Official Statement of Marks</h2>
-                    <span class="demo-badge" style="margin-top: 0.35rem;">Fictional Sample Data Only</span>
+                    <div class="modal-subtitle">Demonstration Examination Board &bull; Academic Year 2025–26</div>
                 </div>
                 <button type="button" class="modal-close" id="modal-close-btn" aria-label="Close dialog">&times;</button>
             </div>
             <div class="modal-body" id="modal-content-area">
-                <div id="modal-loading" style="text-align: center; padding: 2.5rem;" aria-live="polite">
-                    <p style="color: var(--muted-color); font-weight: 500;">Loading verified result data from secure server...</p>
+                <div id="modal-loading" class="loading" aria-live="polite">
+                    Loading verified result data from secure server...
                 </div>
-                <div id="modal-error" class="alert alert-error" style="display: none;" role="alert" aria-live="polite"></div>
-                <div id="modal-result-content" style="display: none;">
-                    <div style="margin-bottom: 1.25rem; font-size: 0.95rem; color: #334155; font-weight: 600; padding: 0.65rem 0.85rem; background: #f8fafc; border-radius: 6px; border-left: 3px solid var(--primary-color);" id="exam-header-info"></div>
+                <div id="modal-error" class="alert alert-error" role="alert" aria-live="polite"></div>
+                <div id="modal-result-content">
+                    <div class="doc-meta" id="exam-header-info"></div>
 
                     <!-- Summary Grid -->
                     <div class="summary-grid" role="region" aria-label="Summary statistics">
                         <div class="summary-card">
-                            <div class="label">Total Marks</div>
+                            <span class="label">Total Marks</span>
                             <div class="value" id="res-total">—</div>
                         </div>
-                        <div class="summary-card">
-                            <div class="label">Percentage</div>
+                        <div class="summary-card summary-card--accent">
+                            <span class="label">Percentage</span>
                             <div class="value" id="res-percentage">—</div>
                         </div>
                         <div class="summary-card">
-                            <div class="label">Grade</div>
-                            <div class="value"><span id="res-grade">—</span> <span id="res-grade-desc" style="font-size: 0.85rem; font-weight: 500; color: var(--muted-color); display: none;"></span></div>
+                            <span class="label">Grade</span>
+                            <div class="value">
+                                <span id="res-grade">—</span>
+                                <span id="res-grade-desc"></span>
+                            </div>
                         </div>
                         <div class="summary-card">
-                            <div class="label">Status</div>
+                            <span class="label">Status</span>
                             <div class="value" id="res-status">—</div>
                         </div>
                     </div>
@@ -124,10 +234,10 @@
                             <thead>
                                 <tr>
                                     <th scope="col">Subject</th>
-                                    <th scope="col">Max Marks</th>
-                                    <th scope="col">Pass Marks</th>
-                                    <th scope="col">Marks Obtained</th>
-                                    <th scope="col">Percentage</th>
+                                    <th scope="col" class="col-num">Max Marks</th>
+                                    <th scope="col" class="col-num">Pass Marks</th>
+                                    <th scope="col" class="col-num">Marks Obtained</th>
+                                    <th scope="col" class="col-num">Percentage</th>
                                     <th scope="col">Grade</th>
                                     <th scope="col">Status</th>
                                 </tr>
@@ -136,6 +246,10 @@
                                 <!-- Populated dynamically -->
                             </tbody>
                         </table>
+                    </div>
+
+                    <div class="doc-note">
+                        This digital statement reflects verified server-side computation. Minimum pass mark is 35/100 per subject. Overall aggregate minimum is 40.0%.
                     </div>
                 </div>
             </div>
@@ -147,31 +261,34 @@
 
     <!-- Change Password Modal -->
     <div class="modal-backdrop" id="change-password-backdrop" role="dialog" aria-modal="true" aria-labelledby="change-password-title" aria-hidden="true">
-        <div class="modal-dialog" id="change-password-modal" tabindex="-1" style="max-width: 480px;">
+        <div class="modal-dialog modal-dialog--narrow" id="change-password-modal" tabindex="-1">
             <div class="modal-header">
-                <h3 class="modal-title" id="change-password-title">Change Password</h3>
+                <div>
+                    <h3 class="modal-title" id="change-password-title">Change Password</h3>
+                    <div class="modal-subtitle">Update your personal account credentials</div>
+                </div>
                 <button type="button" class="modal-close" id="change-password-close-btn" aria-label="Close dialog">&times;</button>
             </div>
             <form id="form-change-password">
                 <div class="modal-body">
-                    <div id="change-password-error" class="alert alert-error" style="display: none; margin-bottom: 1rem;" role="alert"></div>
-                    <div id="change-password-success" class="alert alert-success" style="display: none; margin-bottom: 1rem;" role="alert"></div>
+                    <div id="change-password-error" class="alert alert-error" role="alert"></div>
+                    <div id="change-password-success" class="alert alert-success" role="alert"></div>
 
-                    <div class="form-group" style="margin-bottom: 1.15rem;">
-                        <label for="input-current-password" style="display: block; font-weight: 600; margin-bottom: 0.4rem;">Current Password</label>
+                    <div class="form-group">
+                        <label for="input-current-password">Current Password</label>
                         <input type="password" id="input-current-password" class="form-control" required autocomplete="current-password" placeholder="••••••••••••">
                     </div>
 
-                    <div class="form-group" style="margin-bottom: 1.15rem;">
-                        <label for="input-new-password" style="display: block; font-weight: 600; margin-bottom: 0.4rem;">New Password</label>
+                    <div class="form-group">
+                        <label for="input-new-password">New Password</label>
                         <input type="password" id="input-new-password" class="form-control" required autocomplete="new-password" minlength="12" placeholder="••••••••••••">
-                        <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.35rem;">
+                        <small class="form-text">
                             Must be at least 12 characters and include uppercase, lowercase, numbers, and special characters.
                         </small>
                     </div>
 
-                    <div class="form-group" style="margin-bottom: 0.5rem;">
-                        <label for="input-confirm-password" style="display: block; font-weight: 600; margin-bottom: 0.4rem;">Confirm New Password</label>
+                    <div class="form-group">
+                        <label for="input-confirm-password">Confirm New Password</label>
                         <input type="password" id="input-confirm-password" class="form-control" required autocomplete="new-password" minlength="12" placeholder="••••••••••••">
                     </div>
                 </div>
@@ -184,7 +301,7 @@
     </div>
 
     <footer class="site-footer" role="contentinfo">
-        <div class="container">
+        <div class="container footer-content">
             <p>&copy; 2026 SRMS Academic Lab Project. Fictional sample data only.</p>
         </div>
     </footer>
