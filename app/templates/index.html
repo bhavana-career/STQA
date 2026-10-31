@@ -18,31 +18,31 @@
 
     <main class="container main-content" id="main-content" role="main">
         <section class="hero-section" aria-labelledby="hero-title">
-            <span class="demo-badge" style="color: var(--primary-hover); background: var(--primary-light); border-color: var(--primary-border);">A considered academic record</span>
-            <h2 id="hero-title">Results you can read with confidence.</h2>
+            <span class="demo-badge" style="color: var(--terracotta); background: #f8e8da; border-color: #e8c3a7;">A considered academic record</span>
+            <h2 id="hero-title">Academic records, made clear.</h2>
             <p class="lead-text">
-                A focused result portal for students and faculty. View verified marks, understand performance, and keep every update accountable.
+                SRMS gives students a calm, transparent way to read verified examination results while faculty keep every mark accurate and accountable.
             </p>
             <div class="card-grid">
                 <article class="portal-card system-card" aria-labelledby="card-student-title">
                     <div>
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-                            <span class="badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">Student Access</span>
-                            <span style="font-size: 0.8rem; color: var(--muted-color); font-weight: 500;">View Results</span>
+                            <span class="badge" style="background: #f8e8da; color: var(--terracotta); border-color: #e8c3a7;">Student Access</span>
+                            <span style="font-size: 0.8rem; color: var(--warm-grey); font-weight: 600;">01 / VIEW</span>
                         </div>
                         <h3 id="card-student-title">Student Portal</h3>
-                        <p>Check your 10th Standard examination results, grade breakdown, and subject performance with server-verified calculations.</p>
+                        <p>Read your examination record, subject-wise marks, grades and academic standing from one verified view.</p>
                     </div>
                     <a href="{{ url_for('auth.student_login') }}" class="btn btn-primary btn-block" id="student-login-link">Student Login</a>
                 </article>
                 <article class="portal-card system-card" aria-labelledby="card-teacher-title">
                     <div>
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-                            <span class="badge" style="background: #f0fdfa; color: #0f766e; border: 1px solid #99f6e4;">Faculty Access</span>
-                            <span style="font-size: 0.8rem; color: var(--muted-color); font-weight: 500;">Marks Entry</span>
+                            <span class="badge" style="background: #edf4ed; color: var(--green); border-color: #b8d0bb;">Faculty Access</span>
+                            <span style="font-size: 0.8rem; color: var(--warm-grey); font-weight: 600;">02 / MANAGE</span>
                         </div>
                         <h3 id="card-teacher-title">Teacher Portal</h3>
-                        <p>Enter, update, and manage subject marks for assigned students with class performance insights and audit logs.</p>
+                        <p>Update assigned marks, review class performance and keep a clear history of every academic change.</p>
                     </div>
                     <a href="{{ url_for('auth.teacher_login') }}" class="btn btn-secondary btn-block" id="teacher-login-link">Teacher Login</a>
                 </article>

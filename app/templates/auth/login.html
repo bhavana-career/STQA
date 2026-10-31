@@ -23,7 +23,7 @@
         <div class="auth-card-container">
             <div class="card auth-card">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-                    <span class="badge" style="{% if role == 'student' %}background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;{% else %}background: #f0fdfa; color: #0f766e; border: 1px solid #99f6e4;{% endif %}">
+                    <span class="badge" style="{% if role == 'student' %}background: #f8e8da; color: var(--terracotta); border-color: #e8c3a7;{% else %}background: #edf4ed; color: var(--green); border-color: #b8d0bb;{% endif %}">
                         {% if role == 'student' %}Student Portal{% else %}Faculty Portal{% endif %}
                     </span>
                     <span class="demo-hint" style="font-size: 0.8rem; color: var(--muted-color);">Secure Login</span>
