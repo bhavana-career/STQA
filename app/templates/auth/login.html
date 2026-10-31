@@ -22,12 +22,18 @@
     <main class="container main-content" id="main-content" role="main">
         <div class="auth-card-container">
             <div class="card auth-card">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                    <span class="badge" style="{% if role == 'student' %}background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;{% else %}background: #f0fdfa; color: #0f766e; border: 1px solid #99f6e4;{% endif %}">
+                        {% if role == 'student' %}Student Portal{% else %}Faculty Portal{% endif %}
+                    </span>
+                    <span class="demo-hint" style="font-size: 0.8rem; color: var(--muted-color);">Secure Login</span>
+                </div>
                 <h2 class="auth-card-title">{{ title }}</h2>
                 <p class="auth-card-subtitle">
                     {% if role == 'student' %}
-                    Enter your Student ID (e.g., STU2026001) and password.
+                    Enter your Student ID (e.g., <code>4INI23IS036</code> or <code>STU2026001</code>) and password.
                     {% else %}
-                    Enter your Teacher ID (e.g., TCH001) and password.
+                    Enter your Teacher ID (e.g., <code>TCH001</code>) and password.
                     {% endif %}
                 </p>
 
@@ -61,7 +67,7 @@
                                maxlength="32"
                                autocomplete="username"
                                value="{{ login_id or '' }}"
-                               placeholder="{% if role == 'student' %}STU2026001{% else %}TCH001{% endif %}"
+                               placeholder="{% if role == 'student' %}4INI23IS036{% else %}TCH001{% endif %}"
                                aria-describedby="login_id_help"/>
                         <small id="login_id_help" class="form-text">Case-insensitive identification code.</small>
                     </div>
@@ -88,26 +94,27 @@
                              aria-labelledby="captcha-label"></div>
                         {% else %}
                         <!-- Mock CAPTCHA for unit & automated test suites -->
-                        <div class="mock-captcha-box" style="padding: 10px; border: 1px dashed #cbd5e1; border-radius: 4px; background: #f8fafc;" aria-labelledby="captcha-label">
+                        <div class="mock-captcha-box" style="padding: 10px 14px; border: 1px dashed var(--border-color); border-radius: 6px; background: #f8fafc; display: flex; align-items: center; justify-content: space-between;" aria-labelledby="captcha-label">
                             <span style="font-size: 0.85rem; color: #475569;">[Automated Testing Security Verification Simulation]</span>
+                            <span class="badge" style="background: #e2e8f0; color: #334155;">Active</span>
                             <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-response" value="XXXX.DUMMY.TOKEN.XXXX"/>
                         </div>
                         {% endif %}
                     </div>
 
-                    <div class="form-actions" style="margin-top: 1.5rem;">
-                        <button type="submit" class="btn btn-primary btn-block" id="btn-submit-login">Sign In</button>
+                    <div class="form-actions" style="margin-top: 1.75rem;">
+                        <button type="submit" class="btn btn-primary btn-block" id="btn-submit-login">Sign In &rarr;</button>
                     </div>
                 </form>
 
                 <div class="auth-card-footer" style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem;">
                     {% if role == 'student' %}
-                    <a href="{{ url_for('auth.teacher_login') }}">Teacher Portal Sign In &rarr;</a>
+                    <a href="{{ url_for('auth.teacher_login') }}" style="color: var(--primary-color); font-weight: 500; text-decoration: none;">Teacher Portal Sign In &rarr;</a>
                     {% else %}
-                    <a href="{{ url_for('auth.student_login') }}">Student Portal Sign In &rarr;</a>
+                    <a href="{{ url_for('auth.student_login') }}" style="color: var(--primary-color); font-weight: 500; text-decoration: none;">Student Portal Sign In &rarr;</a>
                     {% endif %}
-                    <span style="margin: 0 0.5rem; color: #94a3b8;">|</span>
-                    <a href="{{ url_for('main.index') }}">Back to Home</a>
+                    <span style="margin: 0 0.5rem; color: #cbd5e1;">|</span>
+                    <a href="{{ url_for('main.index') }}" style="color: var(--muted-color); text-decoration: none;">Back to Home</a>
                 </div>
             </div>
         </div>

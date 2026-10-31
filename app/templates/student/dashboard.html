@@ -11,16 +11,16 @@
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <header class="site-header" role="banner">
         <div class="container header-container">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.85rem;">
                 <h1 class="portal-title">Student Portal</h1>
-                <span class="demo-badge">Demo Mode</span>
+                <span class="demo-badge">Academic Verification</span>
             </div>
-            <div class="header-user-info" style="display: flex; align-items: center; gap: 1rem;">
+            <div class="header-user-info" style="display: flex; align-items: center; gap: 0.75rem;">
                 <span>Logged in as: <strong>{{ current_user.login_id }}</strong></span>
-                <button type="button" class="btn btn-outline" id="btn-open-change-password" style="padding: 0.35rem 0.75rem;">Change Password</button>
+                <button type="button" class="btn btn-outline" id="btn-open-change-password" style="padding: 0.4rem 0.85rem; font-size: 0.85rem;">Change Password</button>
                 <form method="POST" action="{{ url_for('auth.logout') }}" style="display: inline;">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <button type="submit" class="btn btn-outline" id="btn-logout" style="padding: 0.35rem 0.75rem;">Logout</button>
+                    <button type="submit" class="btn btn-outline" id="btn-logout" style="padding: 0.4rem 0.85rem; font-size: 0.85rem;">Logout</button>
                 </form>
             </div>
         </div>
@@ -28,40 +28,46 @@
 
     <main class="container main-content" id="main-content" role="main">
         <div class="card" aria-labelledby="profile-heading">
-            <h2 class="card-title" id="profile-heading">Student Profile</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
-                <div>
-                    <span style="color: var(--muted-color); font-size: 0.85rem;">Full Name:</span>
-                    <p style="font-weight: 600; font-size: 1.1rem;" id="student-name">{{ student.full_name }}</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem;">
+                <h2 class="card-title" id="profile-heading" style="margin-bottom: 0;">Student Profile</h2>
+                <span class="badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">Enrolled Student</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1.25rem;">
+                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <span style="color: var(--muted-color); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Full Name</span>
+                    <p style="font-weight: 700; font-size: 1.15rem; color: #0f172a; margin-top: 0.25rem;" id="student-name">{{ student.full_name }}</p>
                 </div>
-                <div>
-                    <span style="color: var(--muted-color); font-size: 0.85rem;">Student ID:</span>
-                    <p style="font-weight: 600; font-size: 1.1rem;" id="student-code"><code>{{ current_user.login_id }}</code></p>
+                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <span style="color: var(--muted-color); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Student ID / USN</span>
+                    <p style="font-weight: 700; font-size: 1.15rem; color: #0f172a; margin-top: 0.25rem;" id="student-code"><code>{{ current_user.login_id }}</code></p>
                 </div>
-                <div>
-                    <span style="color: var(--muted-color); font-size: 0.85rem;">Class & Section:</span>
-                    <p style="font-weight: 600; font-size: 1.1rem;">{{ student.section.class_name }} — Section {{ student.section.name }}</p>
+                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <span style="color: var(--muted-color); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Class &amp; Section</span>
+                    <p style="font-weight: 700; font-size: 1.15rem; color: #0f172a; margin-top: 0.25rem;">{{ student.section.class_name }} &bull; Section {{ student.section.name }}</p>
                 </div>
-                <div>
-                    <span style="color: var(--muted-color); font-size: 0.85rem;">Roll Number:</span>
-                    <p style="font-weight: 600; font-size: 1.1rem;">{{ student.roll_number }}</p>
+                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <span style="color: var(--muted-color); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Roll Number</span>
+                    <p style="font-weight: 700; font-size: 1.15rem; color: #0f172a; margin-top: 0.25rem;">{{ student.roll_number }}</p>
                 </div>
             </div>
         </div>
 
         <div class="card" aria-labelledby="exam-heading">
             <h2 class="card-title" id="exam-heading">Examination Results</h2>
-            <p style="color: var(--muted-color); margin-bottom: 1.25rem;">
-                Official academic results for standard 10th examinations. All calculations are verified server-side.
+            <p style="color: var(--muted-color); margin-bottom: 1.5rem; font-size: 0.95rem;">
+                Official academic records for Standard 10th examinations. All grades and totals are computed and verified server-side.
             </p>
             {% if latest_exam %}
-                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding: 1.25rem; background: #f8fafc; border-radius: 6px; border: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.25rem; padding: 1.5rem; background: #ffffff; border-radius: 10px; border: 1px solid var(--border-color); box-shadow: var(--shadow-xs);">
                     <div>
-                        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary-color);">{{ latest_exam.name }}</h3>
-                        <p style="color: var(--muted-color); font-size: 0.85rem;">Academic Year: {{ latest_exam.academic_year }}</p>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+                            <h3 style="font-size: 1.2rem; font-weight: 700; color: #0f172a;">{{ latest_exam.name }}</h3>
+                            <span class="badge" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac;">Published</span>
+                        </div>
+                        <p style="color: var(--muted-color); font-size: 0.88rem;">Academic Term: <strong>{{ latest_exam.academic_year }}</strong> &bull; Total Evaluation Modules: 5</p>
                     </div>
                     <button type="button" class="btn btn-primary" id="btn-view-result" aria-haspopup="dialog" aria-controls="result-modal">
-                        View Detailed Result
+                        View Detailed Result &rarr;
                     </button>
                 </div>
             {% else %}
@@ -79,17 +85,17 @@
             <div class="modal-header">
                 <div>
                     <h2 class="modal-title" id="result-modal-title">Official Statement of Marks</h2>
-                    <span class="demo-badge" style="margin-top: 0.25rem;">Fictional Sample Data Only</span>
+                    <span class="demo-badge" style="margin-top: 0.35rem;">Fictional Sample Data Only</span>
                 </div>
                 <button type="button" class="modal-close" id="modal-close-btn" aria-label="Close dialog">&times;</button>
             </div>
             <div class="modal-body" id="modal-content-area">
-                <div id="modal-loading" style="text-align: center; padding: 2rem;" aria-live="polite">
-                    <p>Loading result data from secure server...</p>
+                <div id="modal-loading" style="text-align: center; padding: 2.5rem;" aria-live="polite">
+                    <p style="color: var(--muted-color); font-weight: 500;">Loading verified result data from secure server...</p>
                 </div>
                 <div id="modal-error" class="alert alert-error" style="display: none;" role="alert" aria-live="polite"></div>
                 <div id="modal-result-content" style="display: none;">
-                    <div style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--muted-color); font-weight: 500;" id="exam-header-info"></div>
+                    <div style="margin-bottom: 1.25rem; font-size: 0.95rem; color: #334155; font-weight: 600; padding: 0.65rem 0.85rem; background: #f8fafc; border-radius: 6px; border-left: 3px solid var(--primary-color);" id="exam-header-info"></div>
 
                     <!-- Summary Grid -->
                     <div class="summary-grid" role="region" aria-label="Summary statistics">
@@ -151,22 +157,22 @@
                     <div id="change-password-error" class="alert alert-error" style="display: none; margin-bottom: 1rem;" role="alert"></div>
                     <div id="change-password-success" class="alert alert-success" style="display: none; margin-bottom: 1rem;" role="alert"></div>
 
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label for="input-current-password" style="display: block; font-weight: 600; margin-bottom: 0.35rem;">Current Password</label>
-                        <input type="password" id="input-current-password" class="form-control" required autocomplete="current-password" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                    <div class="form-group" style="margin-bottom: 1.15rem;">
+                        <label for="input-current-password" style="display: block; font-weight: 600; margin-bottom: 0.4rem;">Current Password</label>
+                        <input type="password" id="input-current-password" class="form-control" required autocomplete="current-password" placeholder="••••••••••••">
                     </div>
 
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label for="input-new-password" style="display: block; font-weight: 600; margin-bottom: 0.35rem;">New Password</label>
-                        <input type="password" id="input-new-password" class="form-control" required autocomplete="new-password" minlength="12" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
-                        <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.25rem;">
+                    <div class="form-group" style="margin-bottom: 1.15rem;">
+                        <label for="input-new-password" style="display: block; font-weight: 600; margin-bottom: 0.4rem;">New Password</label>
+                        <input type="password" id="input-new-password" class="form-control" required autocomplete="new-password" minlength="12" placeholder="••••••••••••">
+                        <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.35rem;">
                             Must be at least 12 characters and include uppercase, lowercase, numbers, and special characters.
                         </small>
                     </div>
 
                     <div class="form-group" style="margin-bottom: 0.5rem;">
-                        <label for="input-confirm-password" style="display: block; font-weight: 600; margin-bottom: 0.35rem;">Confirm New Password</label>
-                        <input type="password" id="input-confirm-password" class="form-control" required autocomplete="new-password" minlength="12" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                        <label for="input-confirm-password" style="display: block; font-weight: 600; margin-bottom: 0.4rem;">Confirm New Password</label>
+                        <input type="password" id="input-confirm-password" class="form-control" required autocomplete="new-password" minlength="12" placeholder="••••••••••••">
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -8,16 +8,19 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <style>
         .input-mark {
-            width: 100px;
-            padding: 0.4rem 0.5rem;
+            width: 105px;
+            padding: 0.45rem 0.65rem;
             border: 1px solid var(--border-color);
-            border-radius: 4px;
+            border-radius: var(--radius-sm);
             font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.15s ease;
         }
         .input-mark:focus-visible {
             outline: 2px solid var(--focus-ring);
             outline-offset: 1px;
             border-color: transparent;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
         }
         .input-mark:disabled {
             background-color: #f1f5f9;
@@ -28,7 +31,7 @@
         .field-error-msg {
             color: var(--error-color);
             font-size: 0.8rem;
-            margin-top: 0.25rem;
+            margin-top: 0.3rem;
             display: block;
             font-weight: 500;
         }
@@ -38,16 +41,16 @@
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <header class="site-header" role="banner">
         <div class="container header-container">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.85rem;">
                 <h1 class="portal-title">Teacher Portal</h1>
-                <span class="demo-badge">Marks Entry</span>
+                <span class="demo-badge">Marks Evaluation</span>
             </div>
-            <div class="header-user-info" style="display: flex; align-items: center; gap: 1rem;">
+            <div class="header-user-info" style="display: flex; align-items: center; gap: 0.75rem;">
                 <span>Logged in as: <strong>{{ current_user.login_id }}</strong></span>
-                <button type="button" class="btn btn-outline" id="btn-open-change-password" style="padding: 0.35rem 0.75rem;">Change Password</button>
+                <button type="button" class="btn btn-outline" id="btn-open-change-password" style="padding: 0.4rem 0.85rem; font-size: 0.85rem;">Change Password</button>
                 <form method="POST" action="{{ url_for('auth.logout') }}" style="display: inline;">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <button type="submit" class="btn btn-outline" id="btn-logout" style="padding: 0.35rem 0.75rem;">Logout</button>
+                    <button type="submit" class="btn btn-outline" id="btn-logout" style="padding: 0.4rem 0.85rem; font-size: 0.85rem;">Logout</button>
                 </form>
             </div>
         </div>
@@ -55,50 +58,56 @@
 
     <main class="container main-content" id="main-content" role="main">
         <div class="card" aria-labelledby="teacher-profile-heading">
-            <h2 class="card-title" id="teacher-profile-heading">Teacher Profile</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 0.75rem;">
-                <div>
-                    <span style="color: var(--muted-color); font-size: 0.85rem;">Teacher Name:</span>
-                    <p style="font-weight: 600; font-size: 1.1rem;">{{ teacher.full_name if teacher else 'Teacher' }}</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem;">
+                <h2 class="card-title" id="teacher-profile-heading" style="margin-bottom: 0;">Teacher Profile</h2>
+                <span class="badge" style="background: #f0fdfa; color: #0f766e; border: 1px solid #99f6e4;">Authorized Evaluator</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;">
+                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <span style="color: var(--muted-color); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Teacher Name:</span>
+                    <p style="font-weight: 700; font-size: 1.15rem; color: #0f172a; margin-top: 0.25rem;">{{ teacher.full_name if teacher else 'Teacher' }}</p>
                 </div>
-                <div>
-                    <span style="color: var(--muted-color); font-size: 0.85rem;">Teacher Code:</span>
-                    <p style="font-weight: 600; font-size: 1.1rem;"><code>{{ current_user.login_id }}</code></p>
+                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <span style="color: var(--muted-color); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Teacher Code:</span>
+                    <p style="font-weight: 700; font-size: 1.15rem; color: #0f172a; margin-top: 0.25rem;"><code>{{ current_user.login_id }}</code></p>
                 </div>
-                <div>
-                    <span style="color: var(--muted-color); font-size: 0.85rem;">Active Term:</span>
-                    <p style="font-weight: 600; font-size: 1.1rem;">{{ latest_exam.academic_year if latest_exam else '2025-26' }}</p>
+                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <span style="color: var(--muted-color); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Active Term:</span>
+                    <p style="font-weight: 700; font-size: 1.15rem; color: #0f172a; margin-top: 0.25rem;">{{ latest_exam.academic_year if latest_exam else '2025-26' }}</p>
                 </div>
             </div>
         </div>
 
         <!-- Teacher Insights & Class Performance Analytics (TC-INSIGHTS) -->
         <div class="card" id="insights-container" style="display: none;" aria-labelledby="insights-heading">
-            <h2 class="card-title" id="insights-heading" style="margin-bottom: 0.25rem;">Class Performance Insights</h2>
-            <p style="color: var(--muted-color); font-size: 0.9rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                <h2 class="card-title" id="insights-heading" style="margin-bottom: 0;">Class Performance Insights</h2>
+                <span class="badge" style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe;">Class Analytics</span>
+            </div>
+            <p style="color: var(--muted-color); font-size: 0.92rem; margin-bottom: 1.5rem;">
                 Aggregated academic metrics across assigned students and subject-wise performance breakdown.
             </p>
 
-            <div class="summary-grid" role="region" aria-label="Class analytics summary" style="margin-top: 0; margin-bottom: 1.5rem;">
+            <div class="summary-grid" role="region" aria-label="Class analytics summary" style="margin-top: 0; margin-bottom: 1.75rem;">
                 <div class="summary-card">
                     <div class="label">Class Average</div>
                     <div class="value" id="insight-class-avg">—</div>
-                    <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.25rem;" id="insight-class-total">—</small>
+                    <small style="color: var(--muted-color); font-size: 0.82rem; display: block; margin-top: 0.35rem;" id="insight-class-total">—</small>
                 </div>
                 <div class="summary-card">
                     <div class="label">Pass Rate</div>
                     <div class="value" id="insight-pass-rate">—</div>
-                    <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.25rem;" id="insight-pass-counts">—</small>
+                    <small style="color: var(--muted-color); font-size: 0.82rem; display: block; margin-top: 0.35rem;" id="insight-pass-counts">—</small>
                 </div>
                 <div class="summary-card">
                     <div class="label">Assigned Students</div>
                     <div class="value" id="insight-total-students">—</div>
-                    <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.25rem;" id="insight-eval-students">—</small>
+                    <small style="color: var(--muted-color); font-size: 0.82rem; display: block; margin-top: 0.35rem;" id="insight-eval-students">—</small>
                 </div>
             </div>
 
-            <div style="margin-top: 1rem;">
-                <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">Subject-Wise Performance</h3>
+            <div style="margin-top: 1.25rem;">
+                <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.75rem; color: #1e293b;">Subject-Wise Performance</h3>
                 <div class="table-responsive">
                     <table class="table" id="insights-subject-table">
                         <caption class="sr-only">Subject performance statistics</caption>
@@ -121,24 +130,24 @@
         </div>
 
         <div class="card" aria-labelledby="students-list-heading">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.75rem;">
                 <div>
                     <h2 class="card-title" id="students-list-heading" style="margin-bottom: 0.25rem;">Assigned Students</h2>
-                    <p style="color: var(--muted-color); font-size: 0.9rem;">
+                    <p style="color: var(--muted-color); font-size: 0.92rem;">
                         Students and subjects assigned to your account. Select a student to enter or update marks.
                     </p>
                 </div>
                 {% if latest_exam %}
                 <div>
-                    <span class="badge badge-pill" style="font-size: 0.85rem; padding: 0.35rem 0.75rem;">
+                    <span class="badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 0.85rem; padding: 0.4rem 0.85rem;">
                         Exam: {{ latest_exam.name }}
                     </span>
                 </div>
                 {% endif %}
             </div>
 
-            <div id="students-loading" style="text-align: center; padding: 2rem;" aria-live="polite">
-                <p>Loading assigned students...</p>
+            <div id="students-loading" style="text-align: center; padding: 2.5rem;" aria-live="polite">
+                <p style="color: var(--muted-color); font-weight: 500;">Loading assigned students...</p>
             </div>
             <div id="students-error" class="alert alert-error" style="display: none;" role="alert" aria-live="polite"></div>
 
@@ -167,17 +176,17 @@
 
     <!-- Marks Editor Modal (TC-UI-06) -->
     <div class="modal-backdrop" id="marks-modal-backdrop" aria-hidden="true">
-        <div class="modal-dialog" id="marks-modal" role="dialog" aria-modal="true" aria-labelledby="marks-modal-title" tabindex="-1" style="max-width: 750px;">
+        <div class="modal-dialog" id="marks-modal" role="dialog" aria-modal="true" aria-labelledby="marks-modal-title" tabindex="-1" style="max-width: 780px;">
             <div class="modal-header">
                 <div>
                     <h2 class="modal-title" id="marks-modal-title">Enter / Edit Marks</h2>
-                    <p id="marks-modal-subtitle" style="font-size: 0.85rem; color: var(--muted-color); margin-top: 0.2rem;"></p>
+                    <p id="marks-modal-subtitle" style="font-size: 0.88rem; color: var(--muted-color); margin-top: 0.25rem; font-weight: 500;"></p>
                 </div>
                 <button type="button" class="modal-close" id="marks-modal-close-btn" aria-label="Close dialog">&times;</button>
             </div>
             <div class="modal-body">
-                <div id="marks-modal-loading" style="text-align: center; padding: 1.5rem;" aria-live="polite">
-                    <p>Loading marks data...</p>
+                <div id="marks-modal-loading" style="text-align: center; padding: 2rem;" aria-live="polite">
+                    <p style="color: var(--muted-color); font-weight: 500;">Loading marks data...</p>
                 </div>
                 <div id="marks-modal-error" class="alert alert-error" style="display: none;" role="alert" aria-live="polite"></div>
                 <div id="marks-modal-success" class="alert alert-success" style="display: none;" role="status" aria-live="polite"></div>
@@ -243,22 +252,22 @@
                     <div id="change-password-error" class="alert alert-error" style="display: none; margin-bottom: 1rem;" role="alert"></div>
                     <div id="change-password-success" class="alert alert-success" style="display: none; margin-bottom: 1rem;" role="alert"></div>
 
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label for="input-current-password" style="display: block; font-weight: 600; margin-bottom: 0.35rem;">Current Password</label>
-                        <input type="password" id="input-current-password" class="form-control" required autocomplete="current-password" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                    <div class="form-group" style="margin-bottom: 1.15rem;">
+                        <label for="input-current-password" style="display: block; font-weight: 600; margin-bottom: 0.4rem;">Current Password</label>
+                        <input type="password" id="input-current-password" class="form-control" required autocomplete="current-password" placeholder="••••••••••••">
                     </div>
 
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label for="input-new-password" style="display: block; font-weight: 600; margin-bottom: 0.35rem;">New Password</label>
-                        <input type="password" id="input-new-password" class="form-control" required autocomplete="new-password" minlength="12" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
-                        <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.25rem;">
+                    <div class="form-group" style="margin-bottom: 1.15rem;">
+                        <label for="input-new-password" style="display: block; font-weight: 600; margin-bottom: 0.4rem;">New Password</label>
+                        <input type="password" id="input-new-password" class="form-control" required autocomplete="new-password" minlength="12" placeholder="••••••••••••">
+                        <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.35rem;">
                             Must be at least 12 characters and include uppercase, lowercase, numbers, and special characters.
                         </small>
                     </div>
 
                     <div class="form-group" style="margin-bottom: 0.5rem;">
-                        <label for="input-confirm-password" style="display: block; font-weight: 600; margin-bottom: 0.35rem;">Confirm New Password</label>
-                        <input type="password" id="input-confirm-password" class="form-control" required autocomplete="new-password" minlength="12" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                        <label for="input-confirm-password" style="display: block; font-weight: 600; margin-bottom: 0.4rem;">Confirm New Password</label>
+                        <input type="password" id="input-confirm-password" class="form-control" required autocomplete="new-password" minlength="12" placeholder="••••••••••••">
                     </div>
                 </div>
                 <div class="modal-footer">
