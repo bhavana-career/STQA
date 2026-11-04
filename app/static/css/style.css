@@ -1,0 +1,1136 @@
+/* ==========================================================================
+   Student Result Management System (SRMS)
+   Professional White & Bright Red Academic Administration Design System
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Core Palette — Strict White & Bright Red Design System */
+  --bg-white: #FFFFFF;
+  --bg-light: #F7F7F7;
+  --bg-subtle: #F2F2F2;
+  --brand-red: #E32636;
+  --brand-red-deep: #B71C2C;
+  --brand-red-tint: #FDF2F3;
+  --brand-red-border: #F5C2C7;
+  --border-grey: #E5E5E5;
+  --border-strong: #D4D4D4;
+  --text-charcoal: #242424;
+  --text-secondary: #707070;
+  --text-muted: #8E8E8E;
+
+  /* Restrained Semantic Status Colours */
+  --status-pass-text: #1B6E38;
+  --status-pass-bg: #EEF7F1;
+  --status-pass-border: #C3E3CD;
+  --status-fail-text: #B71C2C;
+  --status-fail-bg: #FDF2F3;
+  --status-fail-border: #F5C2C7;
+
+  /* Restrained Border Radius */
+  --radius-xs: 4px;
+  --radius-sm: 5px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-light);
+  color: var(--text-charcoal);
+  font-size: 14px;
+  line-height: 1.45;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--brand-red);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--brand-red-deep);
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  background: var(--bg-light);
+  border: 1px solid var(--border-grey);
+  padding: 0.1rem 0.35rem;
+  border-radius: var(--radius-xs);
+  color: var(--text-charcoal);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Application Shell & Sidebar Navigation
+   ========================================================================== */
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-light);
+}
+
+.sidebar {
+  width: 232px;
+  background: var(--bg-white);
+  color: var(--text-charcoal);
+  border-right: 1px solid var(--border-grey);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.sidebar-brand {
+  padding: 0.95rem 1.1rem;
+  border-bottom: 1px solid var(--border-grey);
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.brand-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-xs);
+  background: var(--brand-red);
+  color: var(--bg-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.brand-text h1 {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-charcoal);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.brand-text span {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  display: block;
+  margin-top: 1px;
+}
+
+.sidebar-user {
+  padding: 0.75rem 1.1rem;
+  background: var(--bg-light);
+  border-bottom: 1px solid var(--border-grey);
+}
+
+.sidebar-user .role-tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-xs);
+  background: var(--brand-red-tint);
+  color: var(--brand-red);
+  border: 1px solid var(--brand-red-border);
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+.sidebar-user .user-name {
+  font-weight: 600;
+  font-size: 0.84rem;
+  color: var(--text-charcoal);
+}
+
+.sidebar-section-label {
+  padding: 0.85rem 1.1rem 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-secondary);
+}
+
+.sidebar-nav {
+  list-style: none;
+  padding: 0.35rem 0;
+  flex: 1;
+}
+
+.sidebar-nav li {
+  margin: 0;
+}
+
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 1.1rem;
+  color: var(--text-charcoal);
+  font-weight: 500;
+  font-size: 0.85rem;
+  border-left: 3px solid transparent;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.sidebar-nav a svg {
+  width: 15px;
+  height: 15px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  transition: color 0.12s ease;
+}
+
+.sidebar-nav a:hover {
+  background: var(--bg-light);
+  color: var(--text-charcoal);
+}
+
+.sidebar-nav a:hover svg {
+  color: var(--text-charcoal);
+}
+
+.sidebar-nav a.active {
+  background: var(--brand-red-tint);
+  color: var(--brand-red);
+  border-left-color: var(--brand-red);
+  font-weight: 600;
+}
+
+.sidebar-nav a.active svg {
+  color: var(--brand-red);
+}
+
+.sidebar-footer {
+  padding: 0.85rem 1.1rem;
+  border-top: 1px solid var(--border-grey);
+  background: var(--bg-white);
+}
+
+.btn-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.48rem 0.75rem;
+  background: var(--bg-white);
+  color: var(--text-charcoal);
+  border: 1px solid var(--border-grey);
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 0.82rem;
+  transition: border-color 0.12s ease, color 0.12s ease, background-color 0.12s ease;
+  cursor: pointer;
+}
+
+.btn-logout svg {
+  width: 14px;
+  height: 14px;
+  color: var(--text-secondary);
+}
+
+.btn-logout:hover {
+  background: var(--brand-red-tint);
+  color: var(--brand-red-deep);
+  border-color: var(--brand-red-border);
+}
+
+.btn-logout:hover svg {
+  color: var(--brand-red-deep);
+}
+
+/* ==========================================================================
+   Main Content & Top Header Bar
+   ========================================================================== */
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--bg-white);
+}
+
+.topbar {
+  background: var(--bg-white);
+  padding: 0.85rem 1.75rem;
+  border-bottom: 1px solid var(--border-grey);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.topbar-title h2 {
+  font-size: 1.08rem;
+  font-weight: 600;
+  color: var(--text-charcoal);
+  letter-spacing: -0.01em;
+}
+
+.topbar-title p {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-top: 1px;
+}
+
+.topbar-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.topbar-meta-divider {
+  width: 1px;
+  height: 14px;
+  background: var(--border-grey);
+}
+
+.content-container {
+  padding: 1.35rem 1.75rem 2.25rem;
+  max-width: 1320px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ==========================================================================
+   Summary Strip & Metrics Bar (Compact Administrative Layout)
+   ========================================================================== */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  background: var(--bg-white);
+  border: 1px solid var(--border-grey);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.35rem;
+  overflow: hidden;
+}
+
+.stat-card {
+  padding: 0.8rem 1rem;
+  border-right: 1px solid var(--border-grey);
+  border-bottom: 1px solid var(--border-grey);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--bg-white);
+}
+
+.stat-card:last-child {
+  border-right: none;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-charcoal);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-card.stat-success .stat-value {
+  color: var(--status-pass-text);
+}
+
+.stat-card.stat-danger .stat-value {
+  color: var(--brand-red);
+}
+
+.stat-card.stat-warning .stat-value {
+  color: var(--brand-red-deep);
+}
+
+.stat-sub {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin-top: 0.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Panels, Sections & Structural Containers
+   ========================================================================== */
+
+.card,
+.section-panel {
+  background: var(--bg-white);
+  border: 1px solid var(--border-grey);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.25rem;
+}
+
+.card-header,
+.section-header {
+  padding: 0.75rem 1.15rem;
+  border-bottom: 1px solid var(--border-grey);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  background: var(--bg-light);
+}
+
+.card-header h3,
+.section-header h3 {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-charcoal);
+  letter-spacing: -0.005em;
+}
+
+.card-body,
+.section-body {
+  padding: 1.1rem 1.15rem;
+}
+
+.card-body-flush {
+  padding: 0;
+}
+
+.section-toolbar {
+  padding: 0.7rem 1.15rem;
+  border-bottom: 1px solid var(--border-grey);
+  background: var(--bg-white);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.section-subtitle {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   Tables & Data Presentation
+   ========================================================================== */
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table th {
+  background: var(--bg-light);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 0.58rem 0.9rem;
+  border-bottom: 1px solid var(--border-grey);
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 0.55rem 0.9rem;
+  border-bottom: 1px solid var(--border-grey);
+  vertical-align: middle;
+  color: var(--text-charcoal);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tbody tr:hover {
+  background-color: var(--bg-light);
+}
+
+.data-table tbody tr.row-failed {
+  background-color: #FFF9FA;
+}
+
+.data-table tbody tr.row-failed:hover {
+  background-color: var(--brand-red-tint);
+}
+
+.data-table tfoot td {
+  padding: 0.65rem 0.9rem;
+  background: var(--bg-light);
+  border-top: 1px solid var(--border-strong);
+  font-weight: 600;
+  color: var(--text-charcoal);
+}
+
+.num-col {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Status Labels & Badges (Compact, Non-Pill Administrative Tags)
+   ========================================================================== */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.14rem 0.48rem;
+  border-radius: var(--radius-xs);
+  font-size: 0.71rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  border: 1px solid transparent;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.badge-pass {
+  background: var(--status-pass-bg);
+  color: var(--status-pass-text);
+  border-color: var(--status-pass-border);
+}
+
+.badge-distinction {
+  background: var(--brand-red-tint);
+  color: var(--brand-red-deep);
+  border-color: var(--brand-red-border);
+}
+
+.badge-first-class,
+.badge-second-class,
+.badge-satisfactory {
+  background: var(--bg-light);
+  color: var(--text-charcoal);
+  border-color: var(--border-grey);
+}
+
+.badge-fail {
+  background: var(--status-fail-bg);
+  color: var(--status-fail-text);
+  border-color: var(--status-fail-border);
+}
+
+.badge-section {
+  background: var(--bg-light);
+  color: var(--text-charcoal);
+  border-color: var(--border-grey);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Forms, Inputs & Buttons
+   ========================================================================== */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+  gap: 0.85rem;
+}
+
+.marks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+}
+
+.form-group label {
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--text-charcoal);
+}
+
+.form-control {
+  height: 34px;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--border-grey);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  color: var(--text-charcoal);
+  background: var(--bg-white);
+  transition: border-color 0.12s ease;
+  font-variant-numeric: tabular-nums;
+}
+
+.form-control::placeholder {
+  color: var(--text-muted);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 2px rgba(227, 38, 54, 0.12);
+}
+
+.form-control[readonly] {
+  background: var(--bg-light);
+  color: var(--text-secondary);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  height: 34px;
+  padding: 0 0.85rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 0.81rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--brand-red);
+  color: var(--bg-white);
+  border-color: var(--brand-red);
+}
+
+.btn-primary:hover {
+  background: var(--brand-red-deep);
+  border-color: var(--brand-red-deep);
+  color: var(--bg-white);
+}
+
+.btn-secondary {
+  background: var(--bg-white);
+  color: var(--text-charcoal);
+  border-color: var(--border-grey);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-light);
+  border-color: var(--border-strong);
+  color: var(--text-charcoal);
+}
+
+.btn-success {
+  background: var(--bg-white);
+  color: var(--text-charcoal);
+  border-color: var(--border-grey);
+}
+
+.btn-success:hover {
+  background: var(--bg-light);
+  border-color: var(--brand-red);
+  color: var(--brand-red);
+}
+
+.btn-danger {
+  background: var(--bg-white);
+  color: var(--brand-red-deep);
+  border-color: var(--brand-red-border);
+}
+
+.btn-danger:hover {
+  background: var(--brand-red-deep);
+  border-color: var(--brand-red-deep);
+  color: var(--bg-white);
+}
+
+.btn-sm {
+  height: 28px;
+  padding: 0 0.6rem;
+  font-size: 0.75rem;
+}
+
+/* ==========================================================================
+   Alerts & Validation Feedback
+   ========================================================================== */
+
+.alert-list {
+  margin-bottom: 1rem;
+}
+
+.alert {
+  padding: 0.65rem 0.95rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.6rem;
+  font-weight: 500;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--border-grey);
+  border-left-width: 3px;
+  background: var(--bg-white);
+  color: var(--text-charcoal);
+}
+
+.alert-success {
+  background: var(--status-pass-bg);
+  color: var(--status-pass-text);
+  border-color: var(--status-pass-border);
+  border-left-color: var(--status-pass-text);
+}
+
+.alert-danger {
+  background: var(--status-fail-bg);
+  color: var(--status-fail-text);
+  border-color: var(--status-fail-border);
+  border-left-color: var(--brand-red);
+}
+
+.alert-warning,
+.alert-info {
+  background: var(--bg-light);
+  color: var(--text-charcoal);
+  border-color: var(--border-grey);
+  border-left-color: var(--brand-red);
+}
+
+/* ==========================================================================
+   Login Page (Minimal Academic Identity)
+   ========================================================================== */
+
+.login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-white);
+  padding: 1.5rem;
+}
+
+.login-shell {
+  width: 100%;
+  max-width: 420px;
+}
+
+.login-brand-header {
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid var(--brand-red);
+  padding-bottom: 0.85rem;
+}
+
+.login-brand-top {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.35rem;
+}
+
+.login-brand-code {
+  background: var(--brand-red);
+  color: var(--bg-white);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.6px;
+  padding: 0.2rem 0.45rem;
+  border-radius: var(--radius-xs);
+}
+
+.login-brand-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--brand-red);
+}
+
+.login-brand-header h1 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-charcoal);
+  letter-spacing: -0.01em;
+}
+
+.login-brand-header p {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-top: 0.15rem;
+}
+
+.login-form-panel {
+  background: var(--bg-white);
+  border: 1px solid var(--border-grey);
+  border-radius: var(--radius-md);
+  padding: 1.35rem 1.4rem;
+}
+
+.login-form-panel h2 {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--text-charcoal);
+  margin-bottom: 0.2rem;
+}
+
+.login-form-panel .subtitle {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  margin-bottom: 1.1rem;
+}
+
+.password-field-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-field-wrapper .form-control {
+  width: 100%;
+  padding-right: 4rem;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 0.4rem;
+  background: var(--bg-light);
+  border: 1px solid var(--border-grey);
+  border-radius: var(--radius-xs);
+  padding: 0.15rem 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.password-toggle-btn:hover {
+  color: var(--text-charcoal);
+  border-color: var(--border-strong);
+}
+
+.demo-credentials-box {
+  margin-top: 1rem;
+  background: var(--bg-light);
+  border: 1px solid var(--border-grey);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  font-size: 0.76rem;
+}
+
+.demo-credentials-box h4 {
+  color: var(--text-charcoal);
+  margin-bottom: 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.demo-credentials-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.3rem;
+}
+
+.demo-cred-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   Formal Digital Marksheet & Student Result Layout
+   ========================================================================== */
+
+.marksheet-document {
+  background: var(--bg-white);
+  border: 1px solid var(--border-grey);
+  border-top: 3px solid var(--brand-red);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.25rem;
+}
+
+.marksheet-banner {
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid var(--border-grey);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  background: var(--bg-light);
+}
+
+.marksheet-banner-title h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-charcoal);
+}
+
+.marksheet-banner-title p {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  margin-top: 1px;
+}
+
+.candidate-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  border-bottom: 1px solid var(--border-grey);
+  background: var(--bg-white);
+}
+
+.candidate-meta-item {
+  padding: 0.7rem 1.25rem;
+  border-right: 1px solid var(--border-grey);
+}
+
+.candidate-meta-item:last-child {
+  border-right: none;
+}
+
+.candidate-meta-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-secondary);
+  margin-bottom: 0.15rem;
+}
+
+.candidate-meta-value {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-charcoal);
+  font-variant-numeric: tabular-nums;
+}
+
+.candidate-meta-sub {
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  margin-top: 0.1rem;
+  display: block;
+}
+
+/* ==========================================================================
+   Class Analytics Charts (Clean, Restrained Red & Neutral Grey)
+   ========================================================================== */
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 1.15rem;
+  margin-bottom: 1.25rem;
+}
+
+.bar-chart-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.bar-chart-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.bar-chart-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-charcoal);
+  font-variant-numeric: tabular-nums;
+}
+
+.bar-track {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-light);
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid var(--border-grey);
+}
+
+.bar-fill {
+  height: 100%;
+  background: var(--brand-red);
+  transition: width 0.2s ease;
+}
+
+.bar-fill.fill-success {
+  background: var(--brand-red);
+}
+
+.bar-fill.fill-warning {
+  background: var(--text-secondary);
+}
+
+.bar-fill.fill-danger {
+  background: var(--brand-red-deep);
+}
+
+/* ==========================================================================
+   Modal Dialog (Restrained Official Result Notification)
+   ========================================================================== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(36, 36, 36, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1.25rem;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.popup-card {
+  background: var(--bg-white);
+  max-width: 420px;
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-grey);
+  border-top: 3px solid var(--brand-red);
+  padding: 1.5rem;
+  text-align: left;
+}
+
+.popup-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.65rem;
+}
+
+.popup-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-xs);
+  background: var(--status-pass-bg);
+  color: var(--status-pass-text);
+  border: 1px solid var(--status-pass-border);
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.popup-card h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-charcoal);
+}
+
+.popup-student-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--brand-red);
+  margin-bottom: 0.35rem;
+}
+
+.popup-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  background: var(--bg-light);
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-grey);
+  margin: 0.9rem 0 1.1rem;
+}
+
+.popup-metric-box span {
+  display: block;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.popup-metric-box strong {
+  font-size: 1.05rem;
+  color: var(--text-charcoal);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Responsive Adjustments
+   ========================================================================== */
+
+@media (max-width: 900px) {
+  .app-shell {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-grey);
+  }
+  .sidebar-nav {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0.25rem 0.5rem;
+  }
+  .sidebar-nav a {
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.45rem 0.75rem;
+  }
+  .sidebar-nav a.active {
+    border-left-color: transparent;
+    border-bottom-color: var(--brand-red);
+  }
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+  .topbar {
+    padding: 0.75rem 1.15rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .content-container {
+    padding: 1rem 1.15rem;
+  }
+}

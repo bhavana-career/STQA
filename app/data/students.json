@@ -1,0 +1,155 @@
+[
+  {
+    "student_id": "STU001",
+    "name": "Aarav Kulkarni",
+    "username": "student01",
+    "password": "Student@123",
+    "class": "10",
+    "section": "A",
+    "roll_number": 101,
+    "marks": {
+      "Physics": 92,
+      "Chemistry": 88,
+      "Mathematics": 95,
+      "Computer Science": 96,
+      "Kannada": 85,
+      "English": 90
+    }
+  },
+  {
+    "student_id": "STU002",
+    "name": "Diya Nair",
+    "username": "student02",
+    "password": "Student@123",
+    "class": "10",
+    "section": "B",
+    "roll_number": 201,
+    "marks": {
+      "Physics": 68,
+      "Chemistry": 72,
+      "Mathematics": 65,
+      "Computer Science": 74,
+      "Kannada": 64,
+      "English": 69
+    }
+  },
+  {
+    "student_id": "STU003",
+    "name": "Rohan Deshmukh",
+    "username": "student03",
+    "password": "Student@123",
+    "class": "10",
+    "section": "C",
+    "roll_number": 301,
+    "marks": {
+      "Physics": 82,
+      "Chemistry": 78,
+      "Mathematics": 28,
+      "Computer Science": 85,
+      "Kannada": 74,
+      "English": 79
+    }
+  },
+  {
+    "student_id": "STU004",
+    "name": "Sneha Hegde",
+    "username": "student04",
+    "password": "Student@123",
+    "class": "10",
+    "section": "A",
+    "roll_number": 102,
+    "marks": {
+      "Physics": 54,
+      "Chemistry": 58,
+      "Mathematics": 52,
+      "Computer Science": 60,
+      "Kannada": 55,
+      "English": 57
+    }
+  },
+  {
+    "student_id": "STU005",
+    "name": "Karthik Gowda",
+    "username": "student05",
+    "password": "Student@123",
+    "class": "10",
+    "section": "A",
+    "roll_number": 103,
+    "marks": {
+      "Physics": 42,
+      "Chemistry": 38,
+      "Mathematics": 40,
+      "Computer Science": 48,
+      "Kannada": 44,
+      "English": 43
+    }
+  },
+  {
+    "student_id": "STU006",
+    "name": "Ananya Rao",
+    "username": "student06",
+    "password": "Student@123",
+    "class": "10",
+    "section": "B",
+    "roll_number": 202,
+    "marks": {
+      "Physics": 84,
+      "Chemistry": 80,
+      "Mathematics": 88,
+      "Computer Science": 91,
+      "Kannada": 79,
+      "English": 82
+    }
+  },
+  {
+    "student_id": "STU007",
+    "name": "Vikram Patil",
+    "username": "student07",
+    "password": "Student@123",
+    "class": "10",
+    "section": "B",
+    "roll_number": 203,
+    "marks": {
+      "Physics": 30,
+      "Chemistry": 25,
+      "Mathematics": 22,
+      "Computer Science": 34,
+      "Kannada": 35,
+      "English": 31
+    }
+  },
+  {
+    "student_id": "STU008",
+    "name": "Meera Joshi",
+    "username": "student08",
+    "password": "Student@123",
+    "class": "10",
+    "section": "C",
+    "roll_number": 302,
+    "marks": {
+      "Physics": 76,
+      "Chemistry": 81,
+      "Mathematics": 79,
+      "Computer Science": 84,
+      "Kannada": 75,
+      "English": 77
+    }
+  },
+  {
+    "student_id": "STU009",
+    "name": "Pranav Shetty",
+    "username": "student09",
+    "password": "Student@123",
+    "class": "10",
+    "section": "C",
+    "roll_number": 303,
+    "marks": {
+      "Physics": 62,
+      "Chemistry": 64,
+      "Mathematics": 61,
+      "Computer Science": 68,
+      "Kannada": 60,
+      "English": 63
+    }
+  }
+]

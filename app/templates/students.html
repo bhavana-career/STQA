@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% block title %}Student Management — SRMS{% endblock %}
+{% block header_title %}Student Management{% endblock %}
+{% block header_subtitle %}Create, search, filter, update, and delete Class 10 student examination records{% endblock %}
+
+{% block content %}
+<!-- Add or Edit Student Panel -->
+<div class="section-panel" id="studentFormCard">
+  <div class="section-header">
+    <h3>
+      {% if edit_student %}
+        Edit Student Record: {{ edit_student.name }} ({{ edit_student.student_id }})
+      {% else %}
+        Register New Class 10 Candidate
+      {% endif %}
+    </h3>
+    {% if edit_student %}
+      <a href="{{ url_for('teacher.students_list') }}" class="btn btn-secondary btn-sm">Cancel Edit</a>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    <form
+      method="POST"
+      id="studentCrudForm"
+      action="{% if edit_student %}{{ url_for('teacher.edit_student_route', student_id=edit_student.student_id) }}{% else %}{{ url_for('teacher.add_student_route') }}{% endif %}"
+    >
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="student_id">Student ID *</label>
+          <input
+            type="text"
+            id="student_id"
+            name="student_id"
+            class="form-control"
+            placeholder="e.g. STU010"
+            value="{{ edit_student.student_id if edit_student else '' }}"
+            {% if edit_student %}readonly{% endif %}
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="name">Full Name *</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            class="form-control"
+            placeholder="e.g. Aditi Verma"
+            value="{{ edit_student.name if edit_student else '' }}"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="username">Assigned Username *</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            class="form-control"
+            placeholder="e.g. student10"
+            value="{{ edit_student.username if edit_student else '' }}"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="student_password">Preassigned Password *</label>
+          <input
+            type="text"
+            id="student_password"
+            name="password"
+            class="form-control"
+            placeholder="e.g. Student@123"
+            value="{{ edit_student.password if edit_student else 'Student@123' }}"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="section">Section *</label>
+          <select id="section" name="section" class="form-control" required>
+            {% for sec in sections %}
+            <option value="{{ sec }}" {% if edit_student and edit_student.section == sec %}selected{% endif %}>
+              Section {{ sec }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="roll_number">Roll Number *</label>
+          <input
+            type="number"
+            id="roll_number"
+            name="roll_number"
+            class="form-control"
+            min="1"
+            placeholder="e.g. 104"
+            value="{{ edit_student.roll_number if edit_student else '' }}"
+            required
+          />
+        </div>
+      </div>
+
+      <div style="margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--border-grey);">
+        <h4 style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-secondary); margin-bottom: 0.4rem;">
+          Initial Subject Marks (0–100 per subject)
+        </h4>
+        <div class="marks-grid">
+          {% for subj in subjects %}
+          <div class="form-group">
+            <label for="mark_{{ subj }}">{{ subj }} *</label>
+            <input
+              type="number"
+              id="mark_{{ subj }}"
+              name="mark_{{ subj }}"
+              class="form-control"
+              min="0"
+              max="100"
+              value="{{ edit_student.marks[subj] if edit_student else 75 }}"
+              required
+            />
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div style="margin-top: 1rem; display: flex; gap: 0.6rem; justify-content: flex-end;">
+        <button type="submit" id="saveStudentBtn" class="btn btn-primary">
+          {% if edit_student %}Update Student Record{% else %}Create Student Record{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Search & Filter Bar + Student Directory Table -->
+<div class="section-panel">
+  <div class="section-header">
+    <div>
+      <h3>Student Directory ({{ students|length }} found)</h3>
+      <span class="section-subtitle">Search by candidate name or ID, or filter by section</span>
+    </div>
+    <form method="GET" action="{{ url_for('teacher.students_list') }}" id="searchFilterForm" style="display: flex; gap: 0.45rem; flex-wrap: wrap; align-items: center;">
+      <input
+        type="text"
+        id="searchQueryInput"
+        name="q"
+        class="form-control"
+        placeholder="Search by Name or ID..."
+        value="{{ search_query }}"
+        style="width: 210px;"
+      />
+      <select id="sectionFilterSelect" name="section" class="form-control" style="width: 140px;">
+        <option value="">All Sections</option>
+        {% for sec in sections %}
+        <option value="{{ sec }}" {% if section_filter == sec %}selected{% endif %}>Section {{ sec }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" id="searchFilterBtn" class="btn btn-primary btn-sm">Filter</button>
+      <a href="{{ url_for('teacher.students_list') }}" id="resetFilterBtn" class="btn btn-secondary btn-sm">Reset</a>
+    </form>
+  </div>
+
+  <div class="card-body-flush">
+    {% if students %}
+    <div class="table-responsive">
+      <table class="data-table" id="studentsManagementTable">
+        <thead>
+          <tr>
+            <th>Student ID</th>
+            <th>Student Name</th>
+            <th>Username</th>
+            <th>Section</th>
+            <th>Total Marks</th>
+            <th>Percentage</th>
+            <th>Classification</th>
+            <th>Result</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in students %}
+          <tr id="student-row-{{ s.student_id }}" class="{% if not s.result.passed_all %}row-failed{% endif %}">
+            <td><strong>{{ s.student_id }}</strong></td>
+            <td>{{ s.name }}</td>
+            <td><code>{{ s.username }}</code></td>
+            <td><span class="badge badge-section">Sec {{ s.section }} &middot; #{{ s.roll_number }}</span></td>
+            <td class="tabular-nums">{{ s.result.total_marks }} / 600</td>
+            <td class="tabular-nums">{{ s.result.formatted_percentage }}</td>
+            <td>
+              <span class="badge {% if s.result.classification == 'Distinction' %}badge-distinction{% elif s.result.classification == 'First Class' %}badge-first-class{% elif s.result.classification == 'Fail' %}badge-fail{% else %}badge-second-class{% endif %}">
+                {{ s.result.classification }}
+              </span>
+            </td>
+            <td>
+              <span class="badge {% if s.result.passed_all %}badge-pass{% else %}badge-fail{% endif %}">
+                {{ s.result.overall_status }}
+              </span>
+            </td>
+            <td style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+              <a
+                href="{{ url_for('teacher.view_student_result', student_id=s.student_id) }}"
+                class="btn btn-secondary btn-sm view-result-btn"
+                id="viewResult-{{ s.student_id }}"
+              >Result</a>
+              <a
+                href="{{ url_for('teacher.students_list', edit=s.student_id) }}"
+                class="btn btn-primary btn-sm edit-student-btn"
+                id="editStudent-{{ s.student_id }}"
+              >Edit</a>
+              <a
+                href="{{ url_for('teacher.marks_management', student_id=s.student_id) }}"
+                class="btn btn-secondary btn-sm edit-marks-btn"
+                id="marksBtn-{{ s.student_id }}"
+              >Marks</a>
+              <form
+                method="POST"
+                action="{{ url_for('teacher.delete_student_route', student_id=s.student_id) }}"
+                class="delete-student-form"
+                data-student-name="{{ s.name }} ({{ s.student_id }})"
+                style="display: inline;"
+              >
+                <button type="submit" id="deleteStudent-{{ s.student_id }}" class="btn btn-danger btn-sm">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div id="emptyStudentsState" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+      No students matched your search or section filter criteria.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

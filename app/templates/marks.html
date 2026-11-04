@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Marks Management — SRMS{% endblock %}
+{% block header_title %}Marks Management{% endblock %}
+{% block header_subtitle %}Enter or update subject marks (0–100) with automatic total, percentage, grade, and classification calculation{% endblock %}
+
+{% block content %}
+<div class="section-panel">
+  <div class="section-header">
+    <div>
+      <h3>Candidate Selection</h3>
+      <span class="section-subtitle">Select an enrolled Class 10 student to record or revise examination marks</span>
+    </div>
+    <form method="GET" action="{{ url_for('teacher.marks_management') }}" style="display: flex; gap: 0.45rem; align-items: center;">
+      <select name="student_id" id="marksStudentSelect" class="form-control" onchange="this.form.submit()" style="min-width: 280px;">
+        {% for s in students %}
+        <option value="{{ s.student_id }}" {% if selected_student and selected_student.student_id == s.student_id %}selected{% endif %}>
+          {{ s.student_id }} — {{ s.name }} (Sec {{ s.section }}, Roll #{{ s.roll_number }})
+        </option>
+        {% endfor %}
+      </select>
+      <button type="submit" id="loadStudentMarksBtn" class="btn btn-primary btn-sm">Load Candidate</button>
+    </form>
+  </div>
+
+  {% if selected_student %}
+  <div class="candidate-meta-grid">
+    <div class="candidate-meta-item">
+      <span class="candidate-meta-label">Candidate</span>
+      <span class="candidate-meta-value" id="marksTargetStudentName">{{ selected_student.name }} ({{ selected_student.student_id }})</span>
+      <span class="candidate-meta-sub">Class {{ selected_student['class'] }} &middot; Section {{ selected_student.section }} &middot; Roll #{{ selected_student.roll_number }}</span>
+    </div>
+    <div class="candidate-meta-item">
+      <span class="candidate-meta-label">Total Marks</span>
+      <span class="candidate-meta-value" id="calculatedTotalMarks">{{ selected_student.result.total_marks }} / 600</span>
+      <span class="candidate-meta-sub">Aggregate out of 600</span>
+    </div>
+    <div class="candidate-meta-item">
+      <span class="candidate-meta-label">Percentage</span>
+      <span class="candidate-meta-value" id="calculatedPercentage">{{ selected_student.result.formatted_percentage }}</span>
+      <span class="candidate-meta-sub">Verified score</span>
+    </div>
+    <div class="candidate-meta-item">
+      <span class="candidate-meta-label">Classification &amp; Status</span>
+      <div style="margin-top: 0.2rem;">
+        <span id="calculatedClassification" class="badge {% if selected_student.result.passed_all %}badge-pass{% else %}badge-fail{% endif %}">
+          {{ selected_student.result.classification }} ({{ selected_student.result.overall_status }})
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('teacher.marks_management', student_id=selected_student.student_id) }}" id="marksEntryForm">
+      <input type="hidden" name="student_id" value="{{ selected_student.student_id }}" />
+
+      <div class="table-responsive" style="border: 1px solid var(--border-grey); border-radius: var(--radius-sm);">
+        <table class="data-table" id="marksEntryTable">
+          <thead>
+            <tr>
+              <th>Subject Name</th>
+              <th>Marks Obtained (0–100)</th>
+              <th>Maximum Marks</th>
+              <th>Computed Grade</th>
+              <th>Subject Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sr in selected_student.result.subject_results %}
+            <tr class="{% if not sr.passed %}row-failed{% endif %}">
+              <td><strong>{{ sr.subject }}</strong></td>
+              <td style="width: 190px;">
+                <input
+                  type="number"
+                  id="input_mark_{{ sr.subject }}"
+                  name="mark_{{ sr.subject }}"
+                  class="form-control"
+                  min="0"
+                  max="100"
+                  value="{{ sr.marks_obtained }}"
+                  required
+                />
+              </td>
+              <td class="tabular-nums">{{ sr.max_marks }}</td>
+              <td><strong id="grade_{{ sr.subject }}">{{ sr.grade }}</strong></td>
+              <td>
+                <span id="status_{{ sr.subject }}" class="badge {% if sr.passed %}badge-pass{% else %}badge-fail{% endif %}">
+                  {{ sr.status }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <span style="font-size: 0.78rem; color: var(--text-secondary);">
+          Passing threshold: Minimum 35 marks required in each of the 6 subjects. Any single subject below 35 results in overall FAIL.
+        </span>
+        <button type="submit" id="submitMarksBtn" class="btn btn-primary">
+          Save &amp; Recalculate Result
+        </button>
+      </div>
+    </form>
+  </div>
+  {% else %}
+  <div class="card-body">
+    <p style="color: var(--text-secondary);">No students available for marks management.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

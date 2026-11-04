@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Class Analytics — SRMS{% endblock %}
+{% block header_title %}Class &amp; Section Performance Analytics{% endblock %}
+{% block header_subtitle %}Independent section-wise averages, subject averages, and classification distributions{% endblock %}
+
+{% block content %}
+<div class="section-panel">
+  <div class="section-header">
+    <div>
+      <h3 id="analyticsSectionHeading">
+        Section {{ selected_section }} Performance Metrics (Calculated strictly from Section {{ selected_section }} students)
+      </h3>
+      <span class="section-subtitle">Select a section to inspect isolated performance metrics and subject distributions</span>
+    </div>
+    <div style="display: flex; gap: 0.4rem;" id="sectionSelectorButtons">
+      {% for sec in sections %}
+      <a
+        href="{{ url_for('teacher.analytics', section=sec) }}"
+        id="selectSectionBtn-{{ sec }}"
+        class="btn {% if selected_section == sec %}btn-primary{% else %}btn-secondary{% endif %} btn-sm"
+      >
+        Section {{ sec }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card-body" style="padding-bottom: 0;">
+    <div class="stats-grid" id="sectionAnalyticsMetrics">
+      <div class="stat-card">
+        <span class="stat-label">Section {{ selected_section }} Students</span>
+        <span class="stat-value" id="secStudentCount">{{ section_stats.student_count }}</span>
+        <span class="stat-sub">Enrolled in Section {{ selected_section }}</span>
+      </div>
+
+      <div class="stat-card">
+        <span class="stat-label">Average Total Marks</span>
+        <span class="stat-value" id="secAvgTotal">{{ section_stats.average_total_marks }}</span>
+        <span class="stat-sub">Out of 600.00</span>
+      </div>
+
+      <div class="stat-card">
+        <span class="stat-label">Average Percentage</span>
+        <span class="stat-value" id="secAvgPercentage">{{ section_stats.average_percentage }}%</span>
+        <span class="stat-sub">Section {{ selected_section }} Mean</span>
+      </div>
+
+      <div class="stat-card stat-success">
+        <span class="stat-label">Passing Students</span>
+        <span class="stat-value" id="secPassingCount">{{ section_stats.passing_students }}</span>
+        <span class="stat-sub">Pass Rate: {{ section_stats.pass_rate }}%</span>
+      </div>
+
+      <div class="stat-card stat-danger">
+        <span class="stat-label">Failing Students</span>
+        <span class="stat-value" id="secFailingCount">{{ section_stats.failing_students }}</span>
+        <span class="stat-sub">Failed &ge;1 subject</span>
+      </div>
+
+      <div class="stat-card stat-warning">
+        <span class="stat-label">Distinction Students</span>
+        <span class="stat-value" id="secDistinctionCount">{{ section_stats.distinction_students }}</span>
+        <span class="stat-sub">Section {{ selected_section }} Distinctions</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Visual Charts Grid -->
+<div class="charts-grid">
+  <!-- Chart 1: Subject-wise Average Marks in Selected Section -->
+  <div class="section-panel" style="margin-bottom: 0;">
+    <div class="section-header">
+      <h3>Section {{ selected_section }} — Subject-Wise Average Marks</h3>
+      <span class="section-subtitle">Scale: 0 to 100 marks</span>
+    </div>
+    <div class="card-body">
+      <div class="bar-chart-list" id="subjectAveragesChart">
+        {% for subj in subjects %}
+        {% set avg_val = section_stats.subject_averages[subj] %}
+        <div class="bar-chart-item">
+          <div class="bar-chart-label">
+            <span>{{ subj }}</span>
+            <span id="subjAvg-{{ subj|replace(' ', '_') }}">{{ avg_val }} / 100</span>
+          </div>
+          <div class="bar-track">
+            <div
+              class="bar-fill {% if avg_val >= 75 %}fill-success{% elif avg_val < 35 %}fill-danger{% endif %}"
+              style="width: {{ avg_val }}%;"
+            ></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart 2: Section-wise Average Performance Comparison -->
+  <div class="section-panel" style="margin-bottom: 0;">
+    <div class="section-header">
+      <h3>Section Comparison &amp; Classification Breakdown</h3>
+      <span class="section-subtitle">Sections A, B, and C</span>
+    </div>
+    <div class="card-body">
+      <div class="bar-chart-list" id="sectionComparisonChart">
+        {% for sec in sections %}
+        {% set sec_data = all_sections[sec] %}
+        <div class="bar-chart-item">
+          <div class="bar-chart-label">
+            <span>Section {{ sec }} ({{ sec_data.student_count }} students)</span>
+            <span id="compareSecAvg-{{ sec }}">{{ sec_data.average_percentage }}% ({{ sec_data.average_total_marks }}/600)</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: {{ sec_data.average_percentage }}%;"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div style="margin: 1.15rem 0 0.65rem; padding-top: 0.9rem; border-top: 1px solid var(--border-grey);">
+        <h4 style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-secondary);">
+          Section {{ selected_section }} — Classification Distribution
+        </h4>
+      </div>
+      <div class="bar-chart-list" id="classificationDistributionChart">
+        {% for cls_name, cls_count in section_stats.classification_distribution.items() %}
+        {% set pct_share = (cls_count / section_stats.student_count * 100) if section_stats.student_count > 0 else 0 %}
+        <div class="bar-chart-item">
+          <div class="bar-chart-label">
+            <span>{{ cls_name }}</span>
+            <span>{{ cls_count }} student(s) ({{ "%.1f"|format(pct_share) }}%)</span>
+          </div>
+          <div class="bar-track">
+            <div
+              class="bar-fill {% if cls_name == 'Fail' %}fill-danger{% elif cls_name == 'Distinction' %}fill-success{% else %}fill-warning{% endif %}"
+              style="width: {{ pct_share }}%;"
+            ></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Section Students Table -->
+<div class="section-panel">
+  <div class="section-header">
+    <h3>Section {{ selected_section }} Candidate Roster</h3>
+    <span class="section-subtitle">{{ section_students|length }} student(s) in Section {{ selected_section }}</span>
+  </div>
+  <div class="card-body-flush">
+    {% if section_students %}
+    <div class="table-responsive">
+      <table class="data-table" id="sectionStudentsTable">
+        <thead>
+          <tr>
+            <th>Student ID</th>
+            <th>Student Name</th>
+            <th>Roll No</th>
+            {% for subj in subjects %}
+            <th>{{ subj }}</th>
+            {% endfor %}
+            <th>Total</th>
+            <th>Percentage</th>
+            <th>Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in section_students %}
+          <tr class="{% if not s.result.passed_all %}row-failed{% endif %}">
+            <td><strong>{{ s.student_id }}</strong></td>
+            <td>{{ s.name }}</td>
+            <td class="tabular-nums">{{ s.roll_number }}</td>
+            {% for subj in subjects %}
+            <td class="tabular-nums">{{ s.marks[subj] }}</td>
+            {% endfor %}
+            <td class="tabular-nums"><strong>{{ s.result.total_marks }}</strong></td>
+            <td class="tabular-nums">{{ s.result.formatted_percentage }}</td>
+            <td>
+              <span class="badge {% if s.result.passed_all %}badge-pass{% else %}badge-fail{% endif %}">
+                {{ s.result.classification }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-secondary); text-align: center; padding: 1.75rem;">No students enrolled in Section {{ selected_section }}.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

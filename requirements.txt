@@ -1,0 +1,6 @@
+Flask>=3.0.0
+pytest>=8.0.0
+pytest-cov>=5.0.0
+pytest-html>=4.1.0
+selenium>=4.20.0
+coverage>=7.5.0

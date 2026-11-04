@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Error {{ error_code }} — SRMS{% endblock %}
+{% block header_title %}{{ error_title }}{% endblock %}
+
+{% block content %}
+<div class="section-panel">
+  <div class="card-body" style="text-align: center; padding: 2.5rem 1.5rem;">
+    <div style="font-size: 2.25rem; font-weight: 700; color: var(--brand-red); line-height: 1.1; margin-bottom: 0.4rem;">{{ error_code }}</div>
+    <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--text-charcoal); margin-bottom: 0.5rem;">{{ error_title }}</h3>
+    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.25rem;">{{ error_message }}</p>
+    <a href="{{ url_for('login.index') }}" class="btn btn-primary">Return to Portal</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block public_content %}
+<div class="login-wrapper">
+  <div class="login-shell">
+    <div class="section-panel" style="border-top: 3px solid var(--brand-red);">
+      <div class="card-body" style="text-align: center; padding: 2.25rem 1.5rem;">
+        <div style="font-size: 2.25rem; font-weight: 700; color: var(--brand-red); line-height: 1.1; margin-bottom: 0.4rem;">{{ error_code }}</div>
+        <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--text-charcoal); margin-bottom: 0.5rem;">{{ error_title }}</h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.25rem;">{{ error_message }}</p>
+        <a href="{{ url_for('login.login_page') }}" class="btn btn-primary">Return to Login</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

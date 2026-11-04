@@ -1,0 +1,10 @@
+[
+  {
+    "teacher_id": "TCH001",
+    "name": "Prof. Rajesh Sharma",
+    "username": "teacher01",
+    "password": "Teacher@123",
+    "role": "teacher",
+    "designation": "Senior Examination Coordinator — Class 10"
+  }
+]

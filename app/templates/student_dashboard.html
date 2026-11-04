@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}Official Examination Marksheet — {{ student.name }}{% endblock %}
+{% block header_title %}
+  {% if is_teacher_view %}
+    Candidate Marksheet — {{ student.name }} ({{ student.student_id }})
+  {% else %}
+    Official Examination Marksheet
+  {% endif %}
+{% endblock %}
+{% block header_subtitle %}{{ examination_name }}{% endblock %}
+
+{% block content %}
+<!-- Official Result Notification Modal (Only rendered when show_popup is True and student passed all 6 subjects) -->
+{% if show_popup and result.passed_all %}
+<div class="modal-overlay" id="resultSuccessPopup" role="dialog" aria-modal="true" aria-labelledby="popupHeading">
+  <div class="popup-card">
+    <div class="popup-header-row">
+      <div class="popup-icon">&#10003;</div>
+      <h2 id="popupHeading">Examination Result Verified</h2>
+    </div>
+    <div class="popup-student-name" id="popupStudentName">{{ student.name }} ({{ student.student_id }})</div>
+    <p style="color: var(--text-secondary); font-size: 0.82rem;">
+      Candidate has passed all six subjects in the {{ examination_name }}.
+    </p>
+    <div class="popup-metrics">
+      <div class="popup-metric-box">
+        <span>Classification</span>
+        <strong id="popupClassification">{{ result.classification }}</strong>
+      </div>
+      <div class="popup-metric-box">
+        <span>Percentage</span>
+        <strong id="popupPercentage">{{ result.formatted_percentage }}</strong>
+      </div>
+    </div>
+    <button type="button" id="closeSuccessPopupBtn" class="btn btn-primary" style="width: 100%;">
+      View Official Marksheet
+    </button>
+  </div>
+</div>
+{% endif %}
+
+{% if is_teacher_view %}
+<div style="margin-bottom: 0.85rem;">
+  <a href="{{ url_for('teacher.students_list') }}" class="btn btn-secondary btn-sm">&larr; Back to Student Management</a>
+</div>
+{% endif %}
+
+<!-- Formal Digital Examination Marksheet -->
+<div class="marksheet-document" id="studentPersonalCard">
+  <div class="marksheet-banner">
+    <div class="marksheet-banner-title">
+      <h3>Statement of Marks &amp; Candidate Profile</h3>
+      <p>{{ examination_name }} &middot; Academic Session 2025–26</p>
+    </div>
+    <span id="overallStatusBadge" class="badge {% if result.passed_all %}badge-pass{% else %}badge-fail{% endif %}" style="font-size: 0.78rem; padding: 0.25rem 0.65rem;">
+      OVERALL RESULT: {{ result.overall_status }}
+    </span>
+  </div>
+
+  <!-- Candidate Identification & Summary Strip -->
+  <div class="candidate-meta-grid">
+    <div class="candidate-meta-item">
+      <span class="candidate-meta-label">Candidate Name</span>
+      <span class="candidate-meta-value" id="studentNameDisplay">{{ student.name }}</span>
+      <span class="candidate-meta-sub">Student ID: <strong id="studentIdDisplay">{{ student.student_id }}</strong></span>
+    </div>
+
+    <div class="candidate-meta-item">
+      <span class="candidate-meta-label">Class &amp; Section</span>
+      <span class="candidate-meta-value" id="studentClassSection">Class {{ student['class'] }} — Sec {{ student.section }}</span>
+      <span class="candidate-meta-sub">Roll Number: <strong id="studentRollDisplay">{{ student.roll_number }}</strong></span>
+    </div>
+
+    <div class="candidate-meta-item">
+      <span class="candidate-meta-label">Total Marks</span>
+      <span class="candidate-meta-value" id="studentTotalMarks" style="color: var(--brand-red);">{{ result.total_marks }} / {{ result.max_marks }}</span>
+      <span class="candidate-meta-sub">Aggregate out of 600</span>
+    </div>
+
+    <div class="candidate-meta-item">
+      <span class="candidate-meta-label">Percentage</span>
+      <span class="candidate-meta-value" id="studentPercentage">{{ result.formatted_percentage }}</span>
+      <span class="candidate-meta-sub">Min. Passing: 35.00%</span>
+    </div>
+
+    <div class="candidate-meta-item">
+      <span class="candidate-meta-label">Overall Classification</span>
+      <span class="candidate-meta-value" id="studentClassification">{{ result.classification }}</span>
+      <span class="candidate-meta-sub">Status: <strong id="studentOverallStatus">{{ result.overall_status }}</strong></span>
+    </div>
+  </div>
+
+  {% if not result.passed_all %}
+  <div style="padding: 0.85rem 1.25rem 0;">
+    <div class="alert alert-danger" id="failedSubjectsAlert" style="margin-bottom: 0;">
+      <div>
+        <strong>Important Notice — Overall Result is FAIL:</strong>
+        A candidate must score at least 35 marks in every subject to pass.
+        Failed Subject(s): <strong id="failedSubjectsList">{{ result.failed_subjects | join(', ') }}</strong>.
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Subject-Wise Marks and Grades Table (Visual Focus) -->
+  <div id="subjectResultsCard" style="padding: 1.1rem 1.25rem;">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.6rem;">
+      <h4 style="font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--brand-red);">
+        Subject-Wise Statement of Marks
+      </h4>
+      <span style="font-size: 0.74rem; color: var(--text-secondary);">Min. 35 / 100 required per subject</span>
+    </div>
+    <div class="table-responsive" style="border: 1px solid var(--border-grey); border-radius: var(--radius-sm);">
+      <table class="data-table" id="studentSubjectMarksTable">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Maximum Marks</th>
+            <th>Marks Obtained</th>
+            <th>Grade</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sr in result.subject_results %}
+          <tr id="subj-row-{{ sr.subject|replace(' ', '_') }}" class="{% if not sr.passed %}row-failed{% endif %}">
+            <td><strong>{{ sr.subject }}</strong></td>
+            <td class="tabular-nums">{{ sr.max_marks }}</td>
+            <td class="subj-marks tabular-nums"><strong>{{ sr.marks_obtained }}</strong></td>
+            <td class="subj-grade"><strong>{{ sr.grade }}</strong></td>
+            <td>
+              <span class="badge {% if sr.passed %}badge-pass{% else %}badge-fail{% endif %}">
+                {{ sr.status }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>Total Aggregate</td>
+            <td class="tabular-nums">{{ result.max_marks }}</td>
+            <td class="tabular-nums" style="color: var(--brand-red);">{{ result.total_marks }} / {{ result.max_marks }}</td>
+            <td class="tabular-nums">{{ result.formatted_percentage }}</td>
+            <td>
+              <span class="badge {% if result.passed_all %}badge-pass{% else %}badge-fail{% endif %}">
+                {{ result.classification }} ({{ result.overall_status }})
+              </span>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Official Grading Matrix Reference (Compact Table) -->
+<div class="section-panel" id="gradingMatrixCard">
+  <div class="section-header">
+    <h3>Official Class 10 Subject Grading Matrix</h3>
+    <span class="section-subtitle">Standardized board evaluation scale</span>
+  </div>
+  <div class="card-body-flush">
+    <div class="table-responsive">
+      <table class="data-table" id="gradingMatrixTable">
+        <thead>
+          <tr>
+            <th>Marks Range</th>
+            <th>Letter Grade</th>
+            <th>Performance Description</th>
+            <th>Subject Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in grading_matrix %}
+          <tr>
+            <td class="tabular-nums"><strong>{{ row.min }} – {{ row.max }}</strong></td>
+            <td><span class="badge {% if row.status == 'Pass' %}badge-first-class{% else %}badge-fail{% endif %}">{{ row.grade }}</span></td>
+            <td>{{ row.description }}</td>
+            <td>
+              <span class="badge {% if row.status == 'Pass' %}badge-pass{% else %}badge-fail{% endif %}">
+                {{ row.status }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

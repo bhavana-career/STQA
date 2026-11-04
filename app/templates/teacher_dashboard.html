@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Examination Overview — SRMS{% endblock %}
+{% block header_title %}Examination Overview — Teacher Dashboard Overview{% endblock %}
+{% block header_subtitle %}{{ examination_name }}{% endblock %}
+
+{% block content %}
+<div class="stats-grid" id="dashboardOverviewGrid">
+  <div class="stat-card">
+    <span class="stat-label">Total Students</span>
+    <span class="stat-value" id="statTotalStudents">{{ overview.total_students }}</span>
+    <span class="stat-sub">Enrolled in Class 10</span>
+  </div>
+
+  <div class="stat-card stat-success">
+    <span class="stat-label">Passed Students</span>
+    <span class="stat-value" id="statTotalPassed">{{ overview.total_passed }}</span>
+    <span class="stat-sub">Passed all 6 subjects</span>
+  </div>
+
+  <div class="stat-card stat-danger">
+    <span class="stat-label">Failed Students</span>
+    <span class="stat-value" id="statTotalFailed">{{ overview.total_failed }}</span>
+    <span class="stat-sub">1 or more failed subjects</span>
+  </div>
+
+  <div class="stat-card stat-warning">
+    <span class="stat-label">Distinction Count</span>
+    <span class="stat-value" id="statDistinction">{{ overview.distinction_count }}</span>
+    <span class="stat-sub">75% &amp; above (all passed)</span>
+  </div>
+
+  <div class="stat-card">
+    <span class="stat-label">Section A</span>
+    <span class="stat-value" id="statSectionA">{{ overview.section_a_count }}</span>
+    <span class="stat-sub">Mean: {{ sections_comparison['A'].average_percentage }}%</span>
+  </div>
+
+  <div class="stat-card">
+    <span class="stat-label">Section B</span>
+    <span class="stat-value" id="statSectionB">{{ overview.section_b_count }}</span>
+    <span class="stat-sub">Mean: {{ sections_comparison['B'].average_percentage }}%</span>
+  </div>
+
+  <div class="stat-card">
+    <span class="stat-label">Section C</span>
+    <span class="stat-value" id="statSectionC">{{ overview.section_c_count }}</span>
+    <span class="stat-sub">Mean: {{ sections_comparison['C'].average_percentage }}%</span>
+  </div>
+</div>
+
+<div class="section-panel">
+  <div class="section-header">
+    <div>
+      <h3>Student Examination Records</h3>
+      <span class="section-subtitle">Class 10 candidate roster and verified result summary</span>
+    </div>
+    <div style="display: flex; gap: 0.45rem; flex-wrap: wrap;">
+      <a href="{{ url_for('teacher.students_list') }}" class="btn btn-primary btn-sm">Manage Students</a>
+      <a href="{{ url_for('teacher.marks_management') }}" class="btn btn-secondary btn-sm">Enter / Edit Marks</a>
+      <a href="{{ url_for('teacher.analytics') }}" class="btn btn-secondary btn-sm">Class Analytics</a>
+    </div>
+  </div>
+
+  <div class="section-toolbar">
+    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+      <input
+        type="text"
+        id="dashboardQuickSearch"
+        class="form-control"
+        placeholder="Filter table by Student ID or Name..."
+        style="width: 240px;"
+      />
+      <select id="dashboardQuickSection" class="form-control" style="width: 145px;">
+        <option value="">All Sections</option>
+        <option value="A">Section A</option>
+        <option value="B">Section B</option>
+        <option value="C">Section C</option>
+      </select>
+    </div>
+    <span class="section-subtitle">Showing {{ students|length }} enrolled candidate(s)</span>
+  </div>
+
+  <div class="card-body-flush">
+    {% if students %}
+    <div class="table-responsive">
+      <table class="data-table" id="dashboardStudentsTable">
+        <thead>
+          <tr>
+            <th>Student ID</th>
+            <th>Student Name</th>
+            <th>Section</th>
+            <th>Total Marks</th>
+            <th>Percentage</th>
+            <th>Result</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in students %}
+          <tr class="{% if not s.result.passed_all %}row-failed{% endif %}" data-section="{{ s.section }}">
+            <td><strong>{{ s.student_id }}</strong></td>
+            <td>{{ s.name }}</td>
+            <td><span class="badge badge-section">Sec {{ s.section }} &middot; Roll #{{ s.roll_number }}</span></td>
+            <td class="tabular-nums"><strong>{{ s.result.total_marks }}</strong> / 600</td>
+            <td class="tabular-nums">{{ s.result.formatted_percentage }}</td>
+            <td>
+              <span class="badge {% if s.result.passed_all %}badge-pass{% else %}badge-fail{% endif %}">
+                {{ s.result.overall_status }}
+              </span>
+              <span class="badge {% if s.result.classification == 'Distinction' %}badge-distinction{% elif s.result.classification == 'Fail' %}badge-fail{% else %}badge-first-class{% endif %}" style="margin-left: 0.25rem;">
+                {{ s.result.classification }}
+              </span>
+            </td>
+            <td style="display: flex; gap: 0.35rem;">
+              <a href="{{ url_for('teacher.view_student_result', student_id=s.student_id) }}" class="btn btn-secondary btn-sm">Marksheet</a>
+              <a href="{{ url_for('teacher.marks_management', student_id=s.student_id) }}" class="btn btn-primary btn-sm">Marks</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-secondary); text-align: center; padding: 1.75rem;">No student records found.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Compact Section Performance Summary -->
+<div class="section-panel">
+  <div class="section-header">
+    <h3>Section-Wise Examination Summary</h3>
+    <a href="{{ url_for('teacher.analytics') }}" class="btn btn-secondary btn-sm">Full Class Analytics &rarr;</a>
+  </div>
+  <div class="card-body">
+    <div class="bar-chart-list">
+      {% for sec in ['A', 'B', 'C'] %}
+      {% set sec_info = sections_comparison[sec] %}
+      <div class="bar-chart-item">
+        <div class="bar-chart-label">
+          <span><strong>Section {{ sec }}</strong> ({{ sec_info.student_count }} candidates &middot; Pass Rate: {{ sec_info.pass_rate }}%)</span>
+          <span>Mean: {{ sec_info.average_percentage }}% ({{ sec_info.average_total_marks }} / 600)</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width: {{ sec_info.average_percentage }}%;"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
